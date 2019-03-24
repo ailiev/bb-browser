@@ -17,5 +17,6 @@ elm_binary(
         ":frontend_pages",
         "@elm_package_elm_browser",
         "@elm_package_elm_html",
+        "@elm_package_rundis_elm_bootstrap",
     ],
 )

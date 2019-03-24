@@ -78,6 +78,13 @@ elm_register_toolchains()
 load("@com_github_edschouten_rules_elm//repository:def.bzl", "elm_repository")
 
 elm_repository(
+    name = "elm_package_avh4_elm_color",
+    sha256 = "f8dfda51b7515d42442bb6a7706a28e03c5db5a159e252c757a91f74b7e52658",
+    strip_prefix = "elm-color-1.0.0",
+    urls = ["https://github.com/avh4/elm-color/archive/1.0.0.tar.gz"],
+)
+
+elm_repository(
     name = "elm_package_elm_browser",
     sha256 = "6afa0d009826abd3cd83b396ecda3dfb16e40fa9b2c03d5f73e7d1278ee995fe",
     strip_prefix = "browser-1.0.1",
@@ -124,6 +131,13 @@ elm_repository(
     sha256 = "cf87286ed5d1b31aaf99c6a3368ccd340d1356b1973f1afe5f668c47e22b3b60",
     strip_prefix = "virtual-dom-1.0.2",
     urls = ["https://github.com/elm/virtual-dom/archive/1.0.2.tar.gz"],
+)
+
+elm_repository(
+    name = "elm_package_rundis_elm_bootstrap",
+    sha256 = "6b16760fd62198a5ca51cbac59c14eca88ca2c5bccd7370e3678ed510631c84a",
+    strip_prefix = "elm-bootstrap-5.1.0",
+    urls = ["https://github.com/rundis/elm-bootstrap/archive/5.1.0.tar.gz"],
 )
 
 load("@io_bazel_rules_go//go:deps.bzl", "go_register_toolchains", "go_rules_dependencies")

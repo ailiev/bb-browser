@@ -1,9 +1,10 @@
 module Main exposing (main)
 
+import Bootstrap.CDN as CDN
+import Bootstrap.Grid as Grid
 import Browser
 import Browser.Navigation as Navigation
-import Html exposing (Html, button, div, text)
-import Html.Events exposing (onClick)
+import Html exposing (text)
 import Page.NotFound as NotFound
 import Page.Welcome as Welcome
 import Platform.Cmd
@@ -50,10 +51,11 @@ update msg model =
 view : Model -> Browser.Document Msg
 view model =
     Browser.Document "This is the title"
-        [ div []
-            [ button [] [ text "-" ]
-            , div [] [ text "123" ]
-            , button [] [ text "+" ]
+        [ Grid.container []
+            [ Grid.row []
+                [ Grid.col []
+                    [ text "Some content for my view here..." ]
+                ]
             ]
         ]
 
