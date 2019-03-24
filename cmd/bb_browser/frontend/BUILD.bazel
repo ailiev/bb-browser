@@ -1,10 +1,20 @@
-load("@com_github_edschouten_rules_elm//elm:def.bzl", "elm_binary")
+load("@com_github_edschouten_rules_elm//elm:def.bzl", "elm_binary", "elm_library")
+
+elm_library(
+    name = "frontend_pages",
+    srcs = [
+        "Page/NotFound.elm",
+        "Page/Welcome.elm",
+    ],
+    strip_import_prefix = "cmd/bb_browser/frontend",
+)
 
 elm_binary(
     name = "frontend",
     main = "Main.elm",
     visibility = ["//visibility:public"],
     deps = [
+        ":frontend_pages",
         "@elm_package_elm_browser",
         "@elm_package_elm_html",
     ],
