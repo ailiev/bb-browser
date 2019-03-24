@@ -39,6 +39,13 @@ http_archive(
 )
 
 http_archive(
+    name = "com_github_edschouten_rules_elm",
+    sha256 = "f6f1bd1b2e03b2d6b59781e48115126ba14fd8792f4c08229f706c13461beae7",
+    strip_prefix = "rules_elm-0.1",
+    urls = ["https://github.com/EdSchouten/rules_elm/archive/v0.1.tar.gz"],
+)
+
+http_archive(
     name = "com_github_twbs_bootstrap",
     build_file_content = """exports_files(["css/bootstrap.min.css", "js/bootstrap.min.js"])""",
     sha256 = "888ffd30b7e192381e2f6a948ca04669fdcc2ccc2ba016de00d38c8e30793323",
@@ -63,6 +70,61 @@ git_repository(
 load("@io_bazel_rules_docker//repositories:repositories.bzl", container_repositories = "repositories")
 
 container_repositories()
+
+load("@com_github_edschouten_rules_elm//elm:deps.bzl", "elm_register_toolchains")
+
+elm_register_toolchains()
+
+load("@com_github_edschouten_rules_elm//repository:def.bzl", "elm_repository")
+
+elm_repository(
+    name = "elm_package_elm_browser",
+    sha256 = "c4c3cb453bfe2dfc3a31f1760688d96e82d0bf091e00c99faadb8ed495dff5aa",
+    strip_prefix = "browser-1.0.0",
+    urls = ["https://github.com/elm/browser/archive/1.0.0.tar.gz"],
+)
+
+elm_repository(
+    name = "elm_package_elm_core",
+    sha256 = "9cfa20b6468b8bfb4f02c6652f43de1dd1c58b328060830ab804964da0417982",
+    strip_prefix = "core-1.0.0",
+    urls = ["https://github.com/elm/core/archive/1.0.0.tar.gz"],
+)
+
+elm_repository(
+    name = "elm_package_elm_html",
+    sha256 = "73b885e0a3d2f9781b1c9bbcc1ee9ac032f503f5ef46a27da3ba617cebbf6fd8",
+    strip_prefix = "html-1.0.0",
+    urls = ["https://github.com/elm/html/archive/1.0.0.tar.gz"],
+)
+
+elm_repository(
+    name = "elm_package_elm_json",
+    sha256 = "cbba2f0ea00fc83f5781207a7de1d49f5a1ad6ed3ce578f218060b87a75310bc",
+    strip_prefix = "json-1.0.0",
+    urls = ["https://github.com/elm/json/archive/1.0.0.tar.gz"],
+)
+
+elm_repository(
+    name = "elm_package_elm_time",
+    sha256 = "e18bca487adec67bfe4043a33b975d81527a7732377050d0421dd86d503c906d",
+    strip_prefix = "time-1.0.0",
+    urls = ["https://github.com/elm/time/archive/1.0.0.tar.gz"],
+)
+
+elm_repository(
+    name = "elm_package_elm_url",
+    sha256 = "840e9d45d8a9bd64a7f76421a1de2518e02c7cbea7ed42efd380b4e875e9682b",
+    strip_prefix = "url-1.0.0",
+    urls = ["https://github.com/elm/url/archive/1.0.0.tar.gz"],
+)
+
+elm_repository(
+    name = "elm_package_elm_virtual_dom",
+    sha256 = "5899564798629e91ef95238f8ba7f4d40260d18496b622469d69fc03457aa842",
+    strip_prefix = "virtual-dom-1.0.0",
+    urls = ["https://github.com/elm/virtual-dom/archive/1.0.0.tar.gz"],
+)
 
 load("@io_bazel_rules_go//go:deps.bzl", "go_register_toolchains", "go_rules_dependencies")
 

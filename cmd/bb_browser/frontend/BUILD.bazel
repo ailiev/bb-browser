@@ -1,0 +1,11 @@
+load("@com_github_edschouten_rules_elm//elm:def.bzl", "elm_binary")
+
+elm_binary(
+    name = "frontend",
+    main = "Main.elm",
+    visibility = ["//visibility:public"],
+    deps = [
+        "@elm_package_elm_browser",
+        "@elm_package_elm_html",
+    ],
+)
