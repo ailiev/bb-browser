@@ -532,7 +532,8 @@ func (p *StreamParser) AddBuildEvent(event *buildeventstream.BuildEvent) error {
 		newChild = n
 
 	default:
-		return status.Error(codes.InvalidArgument, "Received unknown build event")
+		err := status.Error(codes.InvalidArgument, "Received unknown build event")
+		return util.StatusWrapf(err, "key.id=%#v, key=%#v, event=%#v", id, key, event)
 	}
 
 	for _, child := range event.Children {
