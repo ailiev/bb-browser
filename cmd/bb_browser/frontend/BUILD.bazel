@@ -2,10 +2,7 @@ load("@com_github_edschouten_rules_elm//elm:def.bzl", "elm_binary", "elm_library
 
 elm_library(
     name = "frontend_pages",
-    srcs = [
-        "Page/NotFound.elm",
-        "Page/Welcome.elm",
-    ],
+    srcs = ["Route.elm"],
     strip_import_prefix = "cmd/bb_browser/frontend",
 )
 
