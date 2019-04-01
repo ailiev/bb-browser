@@ -1,6 +1,7 @@
 package buildevents
 
 import (
+	"log"
 	"sort"
 
 	buildeventstream "github.com/bazelbuild/bazel/src/main/java/com/google/devtools/build/lib/buildeventstream/proto"
@@ -186,25 +187,6 @@ func (p *StreamParser) AddBuildEvent(event *buildeventstream.BuildEvent) error {
 		}
 		if err := parent.addConfigurationNode(n); err != nil {
 			return util.StatusWrapf(err, "Cannot add \"Configuration\" node with ID %#v", key)
-		}
-		newChild = n
-
-	case *buildeventstream.BuildEventId_ConfiguredLabel:
-		payload, ok := event.Payload.(*buildeventstream.BuildEvent_Aborted)
-		if !ok {
-			return status.Error(codes.InvalidArgument, "\"ConfiguredLabel\" build event has an incorrect payload type")
-		}
-
-		n := &ConfiguredLabelNode{
-			ID:      id.ConfiguredLabel,
-			Payload: payload.Aborted,
-		}
-		parent, err := p.getSingleParent(key)
-		if err != nil {
-			return err
-		}
-		if err := parent.addConfiguredLabelNode(n); err != nil {
-			return util.StatusWrapf(err, "Cannot add \"ConfiguredLabel\" node with ID %#v", key)
 		}
 		newChild = n
 
@@ -530,6 +512,9 @@ func (p *StreamParser) AddBuildEvent(event *buildeventstream.BuildEvent) error {
 			return util.StatusWrapf(err, "Cannot add \"WorkspaceStatus\" node with ID %#v", key)
 		}
 		newChild = n
+
+	case *buildeventstream.BuildEventId_ConfiguredLabel:
+		log.Printf("Skipping BuildEventId_ConfiguredLabel with key %#v", key)
 
 	default:
 		err := status.Error(codes.InvalidArgument, "Received unknown build event")
