@@ -7,6 +7,9 @@ import Browser
 import Browser.Navigation as Navigation
 import Html exposing (h1, span, text)
 import Html.Attributes exposing (class, href)
+import Page
+import Page.NotFound
+import Page.Welcome
 import Platform.Cmd
 import Platform.Sub
 import Route
@@ -74,19 +77,27 @@ update msg model =
 -- VIEW
 
 
-viewPage : List (Html.Html Msg) -> Browser.Document Msg
+viewPage : Page.Page Msg -> Browser.Document Msg
 viewPage contents =
-    Browser.Document "Buildbarn Browser"
+    Browser.Document ("Buildbarn Browser - " ++ contents.title)
         [ Html.nav
-            [ class "navbar", class "navbar-dark", class "bg-primary" ]
+            [ class "navbar"
+            , class "navbar-dark"
+            , class ("bg-" ++ contents.banner_color)
+            ]
             [ span [ class "navbar-brand" ] [ text "Buildbarn Browser" ] ]
-        , Grid.container [] contents
+        , Grid.container [] ([ h1 [] [ text contents.title ] ] ++ contents.body)
         ]
 
 
 view : Model -> Browser.Document Msg
 view model =
-    viewPage [ h1 [] [ text "Heading 1" ] ]
+    case model of
+        NotFound ->
+            viewPage Page.NotFound.view
+
+        Welcome ->
+            viewPage Page.Welcome.view
 
 
 
