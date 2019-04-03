@@ -3,6 +3,7 @@ module Main exposing (main)
 import Bootstrap.CDN as CDN
 import Bootstrap.Grid as Grid
 import Bootstrap.Navbar as Navbar
+import Bootstrap.Utilities.Spacing exposing (mb5, my4)
 import Browser
 import Browser.Navigation as Navigation
 import Html exposing (a, h1, text)
@@ -109,7 +110,7 @@ viewPage contents =
             , class ("bg-" ++ contents.bannerColor)
             ]
             [ a [ class "navbar-brand", href "#" ] [ text "Buildbarn Browser" ] ]
-        , Grid.container [] ([ h1 [] [ text contents.title ] ] ++ contents.body)
+        , Grid.container [ mb5 ] ([ h1 [ my4 ] [ text contents.title ] ] ++ contents.body)
         ]
 
 
