@@ -23,7 +23,7 @@ urlPattern pattern description =
 view : Page.Page msg
 view =
     { title = "Welcome!"
-    , banner_color = "success"
+    , bannerColor = "success"
     , body =
         [ p []
             [ text "This page allows you to display objects stored in the Content Addressable Storage (CAS) and Action Cache (AC) as defined by the "

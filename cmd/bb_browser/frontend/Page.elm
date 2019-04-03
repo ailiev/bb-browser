@@ -5,6 +5,6 @@ import Html
 
 type alias Page msg =
     { title : String
-    , banner_color : String
+    , bannerColor : String
     , body : List (Html.Html msg)
     }

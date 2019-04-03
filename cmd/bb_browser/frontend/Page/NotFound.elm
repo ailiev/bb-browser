@@ -7,6 +7,6 @@ import Page
 view : Page.Page msg
 view =
     { title = "Page not found"
-    , banner_color = "danger"
+    , bannerColor = "danger"
     , body = [ p [] [ text "The URL that was requested does not correspond to a page." ] ]
     }

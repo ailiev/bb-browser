@@ -5,7 +5,7 @@ import Bootstrap.Grid as Grid
 import Bootstrap.Navbar as Navbar
 import Browser
 import Browser.Navigation as Navigation
-import Html exposing (h1, span, text)
+import Html exposing (a, h1, text)
 import Html.Attributes exposing (class, href)
 import Page
 import Page.NotFound
@@ -20,9 +20,15 @@ import Url exposing (Url)
 -- MODEL
 
 
-type Model
+type CurrentPage
     = NotFound
     | Welcome
+
+
+type alias Model =
+    { currentPage : CurrentPage
+    , navigationKey : Navigation.Key
+    }
 
 
 type alias Flags =
@@ -31,32 +37,35 @@ type alias Flags =
 
 init : Flags -> Url -> Navigation.Key -> ( Model, Cmd Msg )
 init flags url navigationKey =
-    changeRouteTo (Route.fromUrl url) NotFound
+    changeRouteTo (Route.fromUrl url)
+        { currentPage = NotFound
+        , navigationKey = navigationKey
+        }
 
 
 changeRouteTo : Maybe Route.Route -> Model -> ( Model, Cmd Msg )
 changeRouteTo maybeRoute model =
     case maybeRoute of
         Nothing ->
-            ( NotFound, Cmd.none )
+            ( { model | currentPage = NotFound }, Cmd.none )
 
         Just (Route.Action _) ->
-            ( NotFound, Cmd.none )
+            ( { model | currentPage = NotFound }, Cmd.none )
 
         Just (Route.Command _) ->
-            ( NotFound, Cmd.none )
+            ( { model | currentPage = NotFound }, Cmd.none )
 
         Just (Route.Directory _) ->
-            ( NotFound, Cmd.none )
+            ( { model | currentPage = NotFound }, Cmd.none )
 
         Just (Route.Tree _) ->
-            ( NotFound, Cmd.none )
+            ( { model | currentPage = NotFound }, Cmd.none )
 
         Just (Route.UncachedActionResult _) ->
-            ( NotFound, Cmd.none )
+            ( { model | currentPage = NotFound }, Cmd.none )
 
         Just Route.Welcome ->
-            ( Welcome, Cmd.none )
+            ( { model | currentPage = Welcome }, Cmd.none )
 
 
 
@@ -70,7 +79,21 @@ type Msg
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    ( model, Cmd.none )
+    case msg of
+        ChangedUrl url ->
+            changeRouteTo (Route.fromUrl url) model
+
+        ClickedLink urlRequest ->
+            case urlRequest of
+                Browser.Internal url ->
+                    ( model
+                    , Navigation.pushUrl model.navigationKey (Url.toString url)
+                    )
+
+                Browser.External href ->
+                    ( model
+                    , Navigation.load href
+                    )
 
 
 
@@ -83,16 +106,16 @@ viewPage contents =
         [ Html.nav
             [ class "navbar"
             , class "navbar-dark"
-            , class ("bg-" ++ contents.banner_color)
+            , class ("bg-" ++ contents.bannerColor)
             ]
-            [ span [ class "navbar-brand" ] [ text "Buildbarn Browser" ] ]
+            [ a [ class "navbar-brand", href "#" ] [ text "Buildbarn Browser" ] ]
         , Grid.container [] ([ h1 [] [ text contents.title ] ] ++ contents.body)
         ]
 
 
 view : Model -> Browser.Document Msg
 view model =
-    case model of
+    case model.currentPage of
         NotFound ->
             viewPage Page.NotFound.view
 
