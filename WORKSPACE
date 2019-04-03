@@ -92,6 +92,13 @@ elm_repository(
 )
 
 elm_repository(
+    name = "elm_package_elm_bytes",
+    sha256 = "922f3526e3b430e947d1d2eac5965e4caae625013649de2f657d4f258a5bdc0b",
+    strip_prefix = "bytes-1.0.8",
+    urls = ["https://github.com/elm/bytes/archive/1.0.8.tar.gz"],
+)
+
+elm_repository(
     name = "elm_package_elm_core",
     sha256 = "5a891e637f310b37b26e41dce3af5ec2989e3effa595aed1ff3324fed96a18d0",
     strip_prefix = "core-1.0.2",
@@ -99,10 +106,24 @@ elm_repository(
 )
 
 elm_repository(
+    name = "elm_package_elm_file",
+    sha256 = "c85b4025e12c1bf2dee9e4d853459ead7d1fa917304adfa2af27d116c86292e6",
+    strip_prefix = "file-1.0.5",
+    urls = ["https://github.com/elm/file/archive/1.0.5.tar.gz"],
+)
+
+elm_repository(
     name = "elm_package_elm_html",
     sha256 = "73b885e0a3d2f9781b1c9bbcc1ee9ac032f503f5ef46a27da3ba617cebbf6fd8",
     strip_prefix = "html-1.0.0",
     urls = ["https://github.com/elm/html/archive/1.0.0.tar.gz"],
+)
+
+elm_repository(
+    name = "elm_package_elm_http",
+    sha256 = "619bc23d7753bc172016ea764233dd7dfded1d919263c41b59885c5bcdd10b01",
+    strip_prefix = "http-2.0.0",
+    urls = ["https://github.com/elm/http/archive/2.0.0.tar.gz"],
 )
 
 elm_repository(

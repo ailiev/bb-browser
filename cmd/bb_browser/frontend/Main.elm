@@ -9,6 +9,7 @@ import Browser.Navigation as Navigation
 import Html exposing (a, h1, text)
 import Html.Attributes exposing (class, href)
 import Page
+import Page.Directory
 import Page.NotFound
 import Page.Welcome
 import Platform.Cmd
@@ -22,7 +23,8 @@ import Url exposing (Url)
 
 
 type CurrentPage
-    = NotFound
+    = Directory Page.Directory.Model
+    | NotFound
     | Welcome
 
 
@@ -56,8 +58,9 @@ changeRouteTo maybeRoute model =
         Just (Route.Command _) ->
             ( { model | currentPage = NotFound }, Cmd.none )
 
-        Just (Route.Directory _) ->
-            ( { model | currentPage = NotFound }, Cmd.none )
+        Just (Route.Directory digest) ->
+            Page.Directory.init digest
+                |> updateWith Directory GotDirectoryMsg model
 
         Just (Route.Tree _) ->
             ( { model | currentPage = NotFound }, Cmd.none )
@@ -76,15 +79,16 @@ changeRouteTo maybeRoute model =
 type Msg
     = ChangedUrl Url
     | ClickedLink Browser.UrlRequest
+    | GotDirectoryMsg Page.Directory.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case msg of
-        ChangedUrl url ->
+    case ( msg, model.currentPage ) of
+        ( ChangedUrl url, _ ) ->
             changeRouteTo (Route.fromUrl url) model
 
-        ClickedLink urlRequest ->
+        ( ClickedLink urlRequest, _ ) ->
             case urlRequest of
                 Browser.Internal url ->
                     ( model
@@ -95,6 +99,21 @@ update msg model =
                     ( model
                     , Navigation.load href
                     )
+
+        ( GotDirectoryMsg subMsg, Directory subModel ) ->
+            Page.Directory.update subMsg subModel
+                |> updateWith Directory GotDirectoryMsg model
+
+        -- Ignore invalid message/model pairs.
+        ( _, _ ) ->
+            ( model, Cmd.none )
+
+
+updateWith : (subModel -> CurrentPage) -> (subMsg -> Msg) -> Model -> ( subModel, Cmd subMsg ) -> ( Model, Cmd Msg )
+updateWith toModel toMsg model ( subModel, subCmd ) =
+    ( { model | currentPage = toModel subModel }
+    , Cmd.map toMsg subCmd
+    )
 
 
 
@@ -117,6 +136,9 @@ viewPage contents =
 view : Model -> Browser.Document Msg
 view model =
     case model.currentPage of
+        Directory _ ->
+            viewPage Page.Directory.view
+
         NotFound ->
             viewPage Page.NotFound.view
 

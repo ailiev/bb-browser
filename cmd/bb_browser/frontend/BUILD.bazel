@@ -4,6 +4,7 @@ elm_library(
     name = "frontend_pages",
     srcs = [
         "Page.elm",
+        "Page/Directory.elm",
         "Page/NotFound.elm",
         "Page/Welcome.elm",
         "Route.elm",
@@ -19,6 +20,7 @@ elm_binary(
         ":frontend_pages",
         "@elm_package_elm_browser",
         "@elm_package_elm_html",
+        "@elm_package_elm_http",
         "@elm_package_rundis_elm_bootstrap",
     ],
 )
