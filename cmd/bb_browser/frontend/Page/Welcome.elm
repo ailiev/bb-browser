@@ -5,8 +5,9 @@ import Html.Attributes exposing (class, href)
 import Page
 
 
--- List entry on the welcome page that gives a description of a URL
--- pattern supported by this service.
+{-| List entry on the welcome page that gives a description of a URL
+pattern supported by this service.
+-}
 urlPattern : String -> List (Html.Html msg) -> Html.Html msg
 urlPattern pattern description =
     li []
