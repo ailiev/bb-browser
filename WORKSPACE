@@ -40,9 +40,9 @@ http_archive(
 
 http_archive(
     name = "com_github_edschouten_rules_elm",
-    sha256 = "f6f1bd1b2e03b2d6b59781e48115126ba14fd8792f4c08229f706c13461beae7",
-    strip_prefix = "rules_elm-0.1",
-    urls = ["https://github.com/EdSchouten/rules_elm/archive/v0.1.tar.gz"],
+    sha256 = "54bdafbd1816dda419d764e162807d4855eed699333643539224e2d71c7f279c",
+    strip_prefix = "rules_elm-eb8fa5ca662f9a4eadad5da8bc4f67ee21ce91dd",
+    urls = ["https://github.com/EdSchouten/rules_elm/archive/eb8fa5ca662f9a4eadad5da8bc4f67ee21ce91dd.tar.gz"],
 )
 
 http_archive(
@@ -178,3 +178,11 @@ bb_browser_go_dependencies()
 load("@com_github_buildbarn_bb_storage//:go_dependencies.bzl", "bb_storage_go_dependencies")
 
 bb_storage_go_dependencies()
+
+http_archive(
+    name = "googleapis",
+    build_file = "BUILD.googleapis",
+    sha256 = "7b6ea252f0b8fb5cd722f45feb83e115b689909bbb6a393a873b6cbad4ceae1d",
+    strip_prefix = "googleapis-143084a2624b6591ee1f9d23e7f5241856642f4d",
+    urls = ["https://github.com/googleapis/googleapis/archive/143084a2624b6591ee1f9d23e7f5241856642f4d.zip"],
+)

@@ -1,4 +1,10 @@
 load("@com_github_edschouten_rules_elm//elm:def.bzl", "elm_binary", "elm_library")
+load("@com_github_edschouten_rules_elm//proto:def.bzl", "elm_proto_library")
+
+elm_proto_library(
+    name = "remote_execution_elm_proto",
+    proto = "@com_github_bazelbuild_remote_apis//build/bazel/remote/execution/v2:remote_execution_proto",
+)
 
 elm_library(
     name = "frontend_pages",
@@ -10,6 +16,12 @@ elm_library(
         "Route.elm",
     ],
     strip_import_prefix = "cmd/bb_browser/frontend",
+    deps = [
+        ":remote_execution_elm_proto",
+        "@elm_package_elm_html",
+        "@elm_package_elm_http",
+        "@elm_package_rundis_elm_bootstrap",
+    ],
 )
 
 elm_binary(
@@ -19,8 +31,5 @@ elm_binary(
     deps = [
         ":frontend_pages",
         "@elm_package_elm_browser",
-        "@elm_package_elm_html",
-        "@elm_package_elm_http",
-        "@elm_package_rundis_elm_bootstrap",
     ],
 )

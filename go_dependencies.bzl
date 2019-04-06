@@ -39,3 +39,9 @@ def bb_browser_go_dependencies():
         commit = "95032a82bc518f77982ea72343cc1ade730072f0",
         importpath = "github.com/kballard/go-shellquote",
     )
+
+    go_repository(
+        name = "com_github_tiziano88_elm_protobuf",
+        commit = "7269bbd2da4740cf9dc85f307e1770050b29411b",
+        importpath = "github.com/tiziano88/elm-protobuf",
+    )
