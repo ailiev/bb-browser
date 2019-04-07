@@ -42,7 +42,7 @@ view =
                 ]
             , urlPattern "/command/${instance}/${hash}/${size}/"
                 [ text "Displays information about a Command stored in the CAS." ]
-            , urlPattern "/directory/${instance}/${hash}/${size}/"
+            , urlPattern "/#directory/${instance}/${hash}/${size}"
                 [ text "Displays information about a Directory (input directory) stored in the CAS." ]
             , urlPattern "/file/${instance}/${hash}/${size}/${filename}"
                 [ text "Serves a file stored in the CAS." ]

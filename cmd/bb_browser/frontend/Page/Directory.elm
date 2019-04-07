@@ -15,8 +15,9 @@ import Url.Builder
 
 
 type Model
-    = Loading
-    | Success
+    = Failure Http.Error
+    | Loading
+    | Success Remote_execution.Directory
 
 
 init : Route.Digest -> ( Model, Cmd Msg )
@@ -25,13 +26,13 @@ init digest =
     , Http.get
         { url =
             Url.Builder.absolute
-                [ "file"
-                , digest.instance
-                , digest.hash
-                , String.fromInt digest.sizeBytes
-                , "_"
+                [ "api"
+                , "get_directory"
                 ]
-                []
+                [ Url.Builder.string "instance" digest.instance
+                , Url.Builder.string "hash" digest.hash
+                , Url.Builder.int "size_bytes" digest.sizeBytes
+                ]
         , expect = Http.expectJson GotDirectory Remote_execution.directoryDecoder
         }
     )
@@ -47,16 +48,55 @@ type Msg
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    ( model, Cmd.none )
+    case msg of
+        GotDirectory result ->
+            case result of
+                Ok directory ->
+                    ( Success directory, Cmd.none )
+
+                Err error ->
+                    ( Failure error, Cmd.none )
 
 
 
 -- VIEW
 
 
-view : Page.Page msg
-view =
+view : Model -> Page.Page msg
+view model =
     { title = "Input directory"
     , bannerColor = "secondary"
-    , body = []
+    , body =
+        case model of
+            Failure error ->
+                [ p []
+                    [ text
+                        (case error of
+                            Http.BadUrl message ->
+                                "BadURL " ++ message
+
+                            Http.Timeout ->
+                                "Timeout"
+
+                            Http.NetworkError ->
+                                "Network error"
+
+                            Http.BadStatus code ->
+                                "BadCode " ++ String.fromInt code
+
+                            Http.BadBody message ->
+                                "BadBody " ++ message
+                        )
+                    ]
+                ]
+
+            Loading ->
+                [ p [] [ text "Loading..." ] ]
+
+            Success directory ->
+                directory.directories
+                    |> List.map
+                        (\(Remote_execution.DirectoryNodeMessage entry) ->
+                            p [] [ text entry.name ]
+                        )
     }

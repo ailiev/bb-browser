@@ -136,8 +136,8 @@ viewPage contents =
 view : Model -> Browser.Document Msg
 view model =
     case model.currentPage of
-        Directory _ ->
-            viewPage Page.Directory.view
+        Directory subModel ->
+            viewPage <| Page.Directory.view subModel
 
         NotFound ->
             viewPage Page.NotFound.view
