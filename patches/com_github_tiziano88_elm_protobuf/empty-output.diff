@@ -7,7 +7,7 @@ index db6b9f3..6983029 100644
  	}
  
 +	fg.P("")
-+	fg.P("unused = 12345")
++	fg.P("uselessDeclarationToPreventErrorDueToEmptyOutputFile = 42")
 +
  	outFile.Content = proto.String(b.String())
  
