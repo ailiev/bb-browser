@@ -40,9 +40,9 @@ http_archive(
 
 http_archive(
     name = "com_github_edschouten_rules_elm",
-    sha256 = "54bdafbd1816dda419d764e162807d4855eed699333643539224e2d71c7f279c",
-    strip_prefix = "rules_elm-eb8fa5ca662f9a4eadad5da8bc4f67ee21ce91dd",
-    urls = ["https://github.com/EdSchouten/rules_elm/archive/eb8fa5ca662f9a4eadad5da8bc4f67ee21ce91dd.tar.gz"],
+    sha256 = "28394af719d982949a3d5ea93a09640ab5a76ace9d95aeb7c8f1853c4eefbda1",
+    strip_prefix = "rules_elm-e24901ee202e1df8c7a608e1403fa02344ce308e",
+    urls = ["https://github.com/EdSchouten/rules_elm/archive/e24901ee202e1df8c7a608e1403fa02344ce308e.tar.gz"],
 )
 
 http_archive(
@@ -134,6 +134,13 @@ elm_repository(
 )
 
 elm_repository(
+    name = "elm_package_elm_regex",
+    sha256 = "42e98d657040339c05c4001ea0f7469ec29beca5cc3c594fb1c11e0ecad53252",
+    strip_prefix = "regex-1.0.0",
+    urls = ["https://github.com/elm/regex/archive/1.0.0.tar.gz"],
+)
+
+elm_repository(
     name = "elm_package_elm_time",
     sha256 = "e18bca487adec67bfe4043a33b975d81527a7732377050d0421dd86d503c906d",
     strip_prefix = "time-1.0.0",
@@ -155,10 +162,24 @@ elm_repository(
 )
 
 elm_repository(
+    name = "elm_package_jweir_elm_iso8601",
+    sha256 = "38e831cf7ae5cc1ece7cd8aaec275df603e2e00c75542580aa0896de12450c8d",
+    strip_prefix = "elm-iso8601-5.0.2",
+    urls = ["https://github.com/jweir/elm-iso8601/archive/5.0.2.tar.gz"],
+)
+
+elm_repository(
     name = "elm_package_rundis_elm_bootstrap",
     sha256 = "6b16760fd62198a5ca51cbac59c14eca88ca2c5bccd7370e3678ed510631c84a",
     strip_prefix = "elm-bootstrap-5.1.0",
     urls = ["https://github.com/rundis/elm-bootstrap/archive/5.1.0.tar.gz"],
+)
+
+elm_repository(
+    name = "elm_package_tiziano88_elm_protobuf",
+    sha256 = "c4d499949e807e3dc96eaf91335be61e579a1c63f6a400139aba9d46292dc902",
+    strip_prefix = "elm-protobuf-7269bbd2da4740cf9dc85f307e1770050b29411b",
+    urls = ["https://github.com/tiziano88/elm-protobuf/archive/7269bbd2da4740cf9dc85f307e1770050b29411b.tar.gz"],
 )
 
 load("@io_bazel_rules_go//go:deps.bzl", "go_register_toolchains", "go_rules_dependencies")

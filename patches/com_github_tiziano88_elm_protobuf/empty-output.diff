@@ -1,0 +1,14 @@
+diff --git protoc-gen-elm/main.go protoc-gen-elm/main.go
+index db6b9f3..6983029 100644
+--- protoc-gen-elm/main.go
++++ protoc-gen-elm/main.go
+@@ -246,6 +246,9 @@ func processFile(inFile *descriptor.FileDescriptorProto) (*plugin.CodeGeneratorR
+ 		}
+ 	}
+ 
++	fg.P("")
++	fg.P("unused = 12345")
++
+ 	outFile.Content = proto.String(b.String())
+ 
+ 	return outFile, nil

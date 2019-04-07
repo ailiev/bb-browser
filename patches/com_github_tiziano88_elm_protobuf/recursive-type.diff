@@ -1,0 +1,81 @@
+diff --git protoc-gen-elm/message.go protoc-gen-elm/message.go
+index f6988db..c564885 100644
+--- protoc-gen-elm/message.go
++++ protoc-gen-elm/message.go
+@@ -109,6 +109,8 @@ func (fg *FileGenerator) GenerateMessageDefinition(prefix string, inMessage *des
+ 		fg.GenerateOneofEncoder(prefix, inMessage, i)
+ 	}
+ 
++	fg.P("type %sType = %sType %s", typeName, typeName, typeName)
++
+ 	return nil
+ }
+ 
+@@ -225,6 +227,26 @@ func (fg *FileGenerator) GenerateMessageEncoder(prefix string, inMessage *descri
+ 		}
+ 		fg.Out()
+ 	}
++
++	fg.P("")
++	fg.P("")
++	fg.P("%s : %sType -> JE.Value", encoderName(typeName + "Type"), typeName)
++	fg.P("%s %s =", encoderName(typeName + "Type"), argName)
++	{
++		fg.In()
++		fg.P("case %s of", argName)
++		{
++			fg.In()
++			fg.P("%sType u ->", typeName)
++			{
++				fg.In()
++				fg.P("%s u", encoderName(typeName))
++				fg.Out()
++			}
++			fg.Out()
++		}
++		fg.Out()
++	}
+ 	return nil
+ }
+ 
+@@ -248,14 +270,20 @@ func fieldElmType(inField *descriptor.FieldDescriptorProto) string {
+ 		return "Bool"
+ 	case descriptor.FieldDescriptorProto_TYPE_STRING:
+ 		return "String"
+-	case descriptor.FieldDescriptorProto_TYPE_MESSAGE,
+-		descriptor.FieldDescriptorProto_TYPE_ENUM:
++	case descriptor.FieldDescriptorProto_TYPE_ENUM:
+ 		// Well known types.
+ 		if n, ok := excludedTypes[inField.GetTypeName()]; ok {
+ 			return n
+ 		}
+ 		_, messageName := convert(inField.GetTypeName())
+ 		return messageName
++	case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
++		// Well known types.
++		if n, ok := excludedTypes[inField.GetTypeName()]; ok {
++			return n
++		}
++		_, messageName := convert(inField.GetTypeName())
++		return messageName + "Type"
+ 	case descriptor.FieldDescriptorProto_TYPE_BYTES:
+ 		// XXX
+ 		return "Bytes"
+@@ -297,7 +325,7 @@ func fieldEncoderName(inField *descriptor.FieldDescriptorProto) string {
+ 			return n
+ 		}
+ 		_, messageName := convert(inField.GetTypeName())
+-		return encoderName(messageName)
++		return encoderName(messageName + "Type")
+ 	case descriptor.FieldDescriptorProto_TYPE_BYTES:
+ 		return "bytesFieldEncoder"
+ 	default:
+@@ -336,7 +364,7 @@ func fieldDecoderName(inField *descriptor.FieldDescriptorProto) string {
+ 			return n
+ 		}
+ 		_, messageName := convert(inField.GetTypeName())
+-		return decoderName(messageName)
++		return fmt.Sprintf("(JD.map %sType %s)", messageName, decoderName(messageName))
+ 	case descriptor.FieldDescriptorProto_TYPE_BYTES:
+ 		return "bytesFieldDecoder"
+ 	default:

@@ -1,5 +1,6 @@
 module Page.Directory exposing (Model, Msg, init, update, view)
 
+import Build.Bazel.Remote.Execution.V2.Remote_execution as Remote_execution
 import Bytes
 import Bytes.Decode
 import Html exposing (p, text)
@@ -31,18 +32,9 @@ init digest =
                 , "_"
                 ]
                 []
-        , expect = Http.expectBytes GotDirectory directoryDecoder
+        , expect = Http.expectJson GotDirectory Remote_execution.directoryDecoder
         }
     )
-
-
-
--- TODO: Use a proper decoder.
-
-
-directoryDecoder : Bytes.Decode.Decoder Int
-directoryDecoder =
-    Bytes.Decode.unsignedInt8
 
 
 
@@ -50,7 +42,7 @@ directoryDecoder =
 
 
 type Msg
-    = GotDirectory (Result Http.Error Int)
+    = GotDirectory (Result Http.Error Remote_execution.Directory)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
