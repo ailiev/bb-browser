@@ -1,5 +1,6 @@
 module Page.Directory exposing (Model, Msg, init, update, view)
 
+import Bootstrap.Button as Button
 import Bootstrap.Table as Table
 import Build.Bazel.Remote.Execution.V2.Remote_execution as Remote_execution
 import Bytes
@@ -19,7 +20,7 @@ import Url.Builder
 type Model
     = Failure Http.Error
     | Loading
-    | Success String Remote_execution.Directory
+    | Success Route.Digest Remote_execution.Directory
 
 
 init : Route.Digest -> ( Model, Cmd Msg )
@@ -35,7 +36,7 @@ init digest =
                 , Url.Builder.string "hash" digest.hash
                 , Url.Builder.int "size_bytes" digest.sizeBytes
                 ]
-        , expect = Http.expectJson (GotDirectory digest.instance) Remote_execution.directoryDecoder
+        , expect = Http.expectJson (GotDirectory digest) Remote_execution.directoryDecoder
         }
     )
 
@@ -45,16 +46,16 @@ init digest =
 
 
 type Msg
-    = GotDirectory String (Result Http.Error Remote_execution.Directory)
+    = GotDirectory Route.Digest (Result Http.Error Remote_execution.Directory)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        GotDirectory instance result ->
+        GotDirectory digest result ->
             case result of
                 Ok directory ->
-                    ( Success instance directory, Cmd.none )
+                    ( Success digest directory, Cmd.none )
 
                 Err error ->
                     ( Failure error, Cmd.none )
@@ -113,7 +114,7 @@ view model =
             Loading ->
                 [ p [] [ text "Loading..." ] ]
 
-            Success instance directory ->
+            Success digest directory ->
                 [ Table.simpleTable
                     ( Table.simpleThead
                         [ Table.th [] [ text "Mode" ]
@@ -131,15 +132,15 @@ view model =
                                             Nothing ->
                                                 text entry.name
 
-                                            Just (Remote_execution.DigestMessage d) ->
+                                            Just (Remote_execution.DigestMessage childDigest) ->
                                                 a
                                                     [ href <|
                                                         "#directory/"
-                                                            ++ instance
+                                                            ++ digest.instance
                                                             ++ "/"
-                                                            ++ d.hash
+                                                            ++ childDigest.hash
                                                             ++ "/"
-                                                            ++ String.fromInt d.sizeBytes
+                                                            ++ String.fromInt childDigest.sizeBytes
                                                     ]
                                                     [ text entry.name ]
                                         , text "/"
@@ -173,14 +174,14 @@ view model =
                                                     Nothing ->
                                                         text entry.name
 
-                                                    Just (Remote_execution.DigestMessage d) ->
+                                                    Just (Remote_execution.DigestMessage childDigest) ->
                                                         a
                                                             [ href <|
                                                                 Url.Builder.absolute
                                                                     [ "file"
-                                                                    , instance
-                                                                    , d.hash
-                                                                    , String.fromInt d.sizeBytes
+                                                                    , digest.instance
+                                                                    , childDigest.hash
+                                                                    , String.fromInt childDigest.sizeBytes
                                                                     , entry.name
                                                                     ]
                                                                     []
@@ -190,5 +191,20 @@ view model =
                                         )
                                )
                     )
+                , Button.linkButton
+                    [ Button.primary
+                    , Button.attrs
+                        [ href <|
+                            Url.Builder.absolute
+                                [ "directory"
+                                , digest.instance
+                                , digest.hash
+                                , String.fromInt digest.sizeBytes
+                                , "/"
+                                ]
+                                [ Url.Builder.string "format" "tar" ]
+                        ]
+                    ]
+                    [ text "Download as tarball" ]
                 ]
     }
