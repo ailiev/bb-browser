@@ -1,9 +1,11 @@
 module Page.Directory exposing (Model, Msg, init, update, view)
 
+import Bootstrap.Table as Table
 import Build.Bazel.Remote.Execution.V2.Remote_execution as Remote_execution
 import Bytes
 import Bytes.Decode
 import Html exposing (p, text)
+import Html.Attributes exposing (class, style)
 import Http
 import Page
 import Route
@@ -62,6 +64,24 @@ update msg model =
 -- VIEW
 
 
+viewDirectoryEntry : String -> Maybe Remote_execution.DigestMessage -> List (Html.Html msg) -> Table.Row msg
+viewDirectoryEntry permissions digest filename =
+    Table.tr [ Table.rowAttr <| class "text-monospace" ]
+        [ Table.td [] [ text permissions ]
+        , Table.td [ Table.cellAttr <| style "text-align" "right" ]
+            [ text
+                (case digest of
+                    Nothing ->
+                        ""
+
+                    Just (Remote_execution.DigestMessage d) ->
+                        String.fromInt d.sizeBytes
+                )
+            ]
+        , Table.td [] filename
+        ]
+
+
 view : Model -> Page.Page msg
 view model =
     { title = "Input directory"
@@ -94,9 +114,45 @@ view model =
                 [ p [] [ text "Loading..." ] ]
 
             Success directory ->
-                directory.directories
-                    |> List.map
-                        (\(Remote_execution.DirectoryNodeMessage entry) ->
-                            p [] [ text entry.name ]
+                [ Table.simpleTable
+                    ( Table.simpleThead
+                        [ Table.th [] [ text "Mode" ]
+                        , Table.th [] [ text "Size" ]
+                        , Table.th [ Table.cellAttr <| style "width" "100%" ] [ text "Filename" ]
+                        ]
+                    , Table.tbody [] <|
+                        (directory.directories
+                            |> List.map
+                                (\(Remote_execution.DirectoryNodeMessage entry) ->
+                                    viewDirectoryEntry
+                                        "drwxr‑xr‑x"
+                                        entry.digest
+                                        [ text <| entry.name ++ "/" ]
+                                )
                         )
+                            ++ (directory.symlinks
+                                    |> List.map
+                                        (\(Remote_execution.SymlinkNodeMessage entry) ->
+                                            viewDirectoryEntry
+                                                "lrwxrwxrwx"
+                                                Nothing
+                                                [ text <| entry.name ++ " → " ++ entry.target ]
+                                        )
+                               )
+                            ++ (directory.files
+                                    |> List.map
+                                        (\(Remote_execution.FileNodeMessage entry) ->
+                                            viewDirectoryEntry
+                                                (if entry.isExecutable then
+                                                    "‑r‑xr‑xr‑x"
+
+                                                 else
+                                                    "‑r‑‑r‑‑r‑‑"
+                                                )
+                                                entry.digest
+                                                [ text entry.name ]
+                                        )
+                               )
+                    )
+                ]
     }
