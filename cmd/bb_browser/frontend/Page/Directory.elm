@@ -4,8 +4,8 @@ import Bootstrap.Table as Table
 import Build.Bazel.Remote.Execution.V2.Remote_execution as Remote_execution
 import Bytes
 import Bytes.Decode
-import Html exposing (p, text)
-import Html.Attributes exposing (class, style)
+import Html exposing (a, p, text)
+import Html.Attributes exposing (class, href, style)
 import Http
 import Page
 import Route
@@ -19,7 +19,7 @@ import Url.Builder
 type Model
     = Failure Http.Error
     | Loading
-    | Success Remote_execution.Directory
+    | Success String Remote_execution.Directory
 
 
 init : Route.Digest -> ( Model, Cmd Msg )
@@ -35,7 +35,7 @@ init digest =
                 , Url.Builder.string "hash" digest.hash
                 , Url.Builder.int "size_bytes" digest.sizeBytes
                 ]
-        , expect = Http.expectJson GotDirectory Remote_execution.directoryDecoder
+        , expect = Http.expectJson (GotDirectory digest.instance) Remote_execution.directoryDecoder
         }
     )
 
@@ -45,16 +45,16 @@ init digest =
 
 
 type Msg
-    = GotDirectory (Result Http.Error Remote_execution.Directory)
+    = GotDirectory String (Result Http.Error Remote_execution.Directory)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        GotDirectory result ->
+        GotDirectory instance result ->
             case result of
                 Ok directory ->
-                    ( Success directory, Cmd.none )
+                    ( Success instance directory, Cmd.none )
 
                 Err error ->
                     ( Failure error, Cmd.none )
@@ -113,7 +113,7 @@ view model =
             Loading ->
                 [ p [] [ text "Loading..." ] ]
 
-            Success directory ->
+            Success instance directory ->
                 [ Table.simpleTable
                     ( Table.simpleThead
                         [ Table.th [] [ text "Mode" ]
@@ -127,7 +127,23 @@ view model =
                                     viewDirectoryEntry
                                         "drwxr‑xr‑x"
                                         entry.digest
-                                        [ text <| entry.name ++ "/" ]
+                                        [ case entry.digest of
+                                            Nothing ->
+                                                text entry.name
+
+                                            Just (Remote_execution.DigestMessage d) ->
+                                                a
+                                                    [ href <|
+                                                        "#directory/"
+                                                            ++ instance
+                                                            ++ "/"
+                                                            ++ d.hash
+                                                            ++ "/"
+                                                            ++ String.fromInt d.sizeBytes
+                                                    ]
+                                                    [ text entry.name ]
+                                        , text "/"
+                                        ]
                                 )
                         )
                             ++ (directory.symlinks
@@ -136,7 +152,10 @@ view model =
                                             viewDirectoryEntry
                                                 "lrwxrwxrwx"
                                                 Nothing
-                                                [ text <| entry.name ++ " → " ++ entry.target ]
+                                                [ text entry.name
+                                                , text " → "
+                                                , text entry.target
+                                                ]
                                         )
                                )
                             ++ (directory.files
@@ -150,7 +169,24 @@ view model =
                                                     "‑r‑‑r‑‑r‑‑"
                                                 )
                                                 entry.digest
-                                                [ text entry.name ]
+                                                [ case entry.digest of
+                                                    Nothing ->
+                                                        text entry.name
+
+                                                    Just (Remote_execution.DigestMessage d) ->
+                                                        a
+                                                            [ href <|
+                                                                Url.Builder.absolute
+                                                                    [ "file"
+                                                                    , instance
+                                                                    , d.hash
+                                                                    , String.fromInt d.sizeBytes
+                                                                    , entry.name
+                                                                    ]
+                                                                    []
+                                                            ]
+                                                            [ text entry.name ]
+                                                ]
                                         )
                                )
                     )

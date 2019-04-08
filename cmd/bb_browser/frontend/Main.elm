@@ -91,9 +91,17 @@ update msg model =
         ( ClickedLink urlRequest, _ ) ->
             case urlRequest of
                 Browser.Internal url ->
-                    ( model
-                    , Navigation.pushUrl model.navigationKey (Url.toString url)
-                    )
+                    if url.path /= "" then
+                        -- Internal link, but not to this application.
+                        ( model
+                        , Navigation.load <| Url.toString url
+                        )
+
+                    else
+                        -- Internal link inside this application.
+                        ( model
+                        , Navigation.pushUrl model.navigationKey (Url.toString url)
+                        )
 
                 Browser.External href ->
                     ( model
