@@ -12,7 +12,7 @@
 		<tr class="text-monospace">
 			<td>drwxr‑xr‑x</td>
 			<td style="text-align: right">{{.Digest.SizeBytes}}</td>
-			<td style="width: 100%"><a href="/directory/{{$instance}}/{{.Digest.Hash}}/{{.Digest.SizeBytes}}/">{{.Name}}</a>/</td>
+			<td style="width: 100%"><a href="/#directory/{{$instance}}/{{.Digest.Hash}}/{{.Digest.SizeBytes}}">{{.Name}}</a>/</td>
 		</tr>
 	{{end}}
 	{{range .Directory.Symlinks}}

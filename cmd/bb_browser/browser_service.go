@@ -583,12 +583,7 @@ func (s *BrowserService) handleDirectory(w http.ResponseWriter, req *http.Reques
 	if req.URL.Query().Get("format") == "tar" {
 		s.generateTarball(ctx, w, digest, directory, s.contentAddressableStorage.GetDirectory)
 	} else {
-		if err := s.templates.ExecuteTemplate(w, "page_directory.html", directoryInfo{
-			Digest:    digest,
-			Directory: directory,
-		}); err != nil {
-			log.Print(err)
-		}
+		http.Error(w, "Requested format must be \"tar\".", http.StatusBadRequest)
 	}
 }
 
