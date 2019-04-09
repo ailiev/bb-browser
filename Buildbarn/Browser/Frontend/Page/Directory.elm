@@ -58,15 +58,13 @@ viewDirectoryEntry permissions digest filename =
     Table.tr [ Table.rowAttr <| class "text-monospace" ]
         [ Table.td [] [ text permissions ]
         , Table.td [ Table.cellAttr <| style "text-align" "right" ]
-            [ text
-                (case digest of
-                    Nothing ->
-                        ""
+            (case digest of
+                Nothing ->
+                    []
 
-                    Just (Remote_execution.DigestMessage d) ->
-                        String.fromInt d.sizeBytes
-                )
-            ]
+                Just (Remote_execution.DigestMessage d) ->
+                    [ text <| String.fromInt d.sizeBytes ]
+            )
         , Table.td [] filename
         ]
 
