@@ -1,9 +1,5 @@
 module Main exposing (main)
 
-import Bootstrap.CDN as CDN
-import Bootstrap.Grid as Grid
-import Bootstrap.Navbar as Navbar
-import Bootstrap.Utilities.Spacing exposing (mb5, my4)
 import Browser
 import Browser.Navigation as Navigation
 import Buildbarn.Browser.Frontend.Page as Page
@@ -12,8 +8,6 @@ import Buildbarn.Browser.Frontend.Page.Directory as PageDirectory
 import Buildbarn.Browser.Frontend.Page.NotFound as PageNotFound
 import Buildbarn.Browser.Frontend.Page.Welcome as PageWelcome
 import Buildbarn.Browser.Frontend.Route as Route
-import Html exposing (a, h1, text)
-import Html.Attributes exposing (class, href)
 import Platform.Cmd
 import Platform.Sub
 import Url exposing (Url)
@@ -136,33 +130,20 @@ updateWith toModel toMsg model ( subModel, subCmd ) =
 -- VIEW
 
 
-viewPage : Page.Page Msg -> Browser.Document Msg
-viewPage contents =
-    Browser.Document ("Buildbarn Browser - " ++ contents.title)
-        [ Html.nav
-            [ class "navbar"
-            , class "navbar-dark"
-            , class ("bg-" ++ contents.bannerColor)
-            ]
-            [ a [ class "navbar-brand", href "#" ] [ text "Buildbarn Browser" ] ]
-        , Grid.container [ mb5 ] ([ h1 [ my4 ] [ text contents.title ] ] ++ contents.body)
-        ]
-
-
 view : Model -> Browser.Document Msg
 view model =
     case model.currentPage of
         Command subModel ->
-            viewPage <| PageCommand.view subModel
+            Page.viewPage <| PageCommand.view subModel
 
         Directory subModel ->
-            viewPage <| PageDirectory.view subModel
+            Page.viewPage <| PageDirectory.view subModel
 
         NotFound ->
-            viewPage PageNotFound.view
+            Page.viewPage PageNotFound.view
 
         Welcome ->
-            viewPage PageWelcome.view
+            Page.viewPage PageWelcome.view
 
 
 

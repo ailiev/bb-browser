@@ -6,9 +6,7 @@ import Build.Bazel.Remote.Execution.V2.Remote_execution as Remote_execution
 import Buildbarn.Browser.Frontend.Api as Api
 import Buildbarn.Browser.Frontend.Page as Page
 import Buildbarn.Browser.Frontend.Route as Route
-import Bytes
-import Bytes.Decode
-import Html exposing (a, p, text)
+import Html exposing (a, text)
 import Html.Attributes exposing (class, href, style)
 import Http
 import Url.Builder
@@ -80,29 +78,10 @@ view model =
     , body =
         case model of
             Failure error ->
-                [ p []
-                    [ text
-                        (case error of
-                            Http.BadUrl message ->
-                                "BadURL " ++ message
-
-                            Http.Timeout ->
-                                "Timeout"
-
-                            Http.NetworkError ->
-                                "Network error"
-
-                            Http.BadStatus code ->
-                                "BadCode " ++ String.fromInt code
-
-                            Http.BadBody message ->
-                                "BadBody " ++ message
-                        )
-                    ]
-                ]
+                Page.viewError error
 
             Loading ->
-                [ p [] [ text "Loading..." ] ]
+                Page.viewLoading
 
             Success digest directory ->
                 [ Table.simpleTable
