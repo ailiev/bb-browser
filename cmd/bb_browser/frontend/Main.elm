@@ -9,6 +9,7 @@ import Browser.Navigation as Navigation
 import Html exposing (a, h1, text)
 import Html.Attributes exposing (class, href)
 import Page
+import Page.Command
 import Page.Directory
 import Page.NotFound
 import Page.Welcome
@@ -23,7 +24,8 @@ import Url exposing (Url)
 
 
 type CurrentPage
-    = Directory Page.Directory.Model
+    = Command Page.Command.Model
+    | Directory Page.Directory.Model
     | NotFound
     | Welcome
 
@@ -55,8 +57,9 @@ changeRouteTo maybeRoute model =
         Just (Route.Action _) ->
             ( { model | currentPage = NotFound }, Cmd.none )
 
-        Just (Route.Command _) ->
-            ( { model | currentPage = NotFound }, Cmd.none )
+        Just (Route.Command digest) ->
+            Page.Command.init digest
+                |> updateWith Command GotCommandMsg model
 
         Just (Route.Directory digest) ->
             Page.Directory.init digest
@@ -79,6 +82,7 @@ changeRouteTo maybeRoute model =
 type Msg
     = ChangedUrl Url
     | ClickedLink Browser.UrlRequest
+    | GotCommandMsg Page.Command.Msg
     | GotDirectoryMsg Page.Directory.Msg
 
 
@@ -107,6 +111,10 @@ update msg model =
                     ( model
                     , Navigation.load href
                     )
+
+        ( GotCommandMsg subMsg, Command subModel ) ->
+            Page.Command.update subMsg subModel
+                |> updateWith Command GotCommandMsg model
 
         ( GotDirectoryMsg subMsg, Directory subModel ) ->
             Page.Directory.update subMsg subModel
@@ -144,6 +152,9 @@ viewPage contents =
 view : Model -> Browser.Document Msg
 view model =
     case model.currentPage of
+        Command subModel ->
+            viewPage <| Page.Command.view subModel
+
         Directory subModel ->
             viewPage <| Page.Directory.view subModel
 

@@ -10,6 +10,7 @@ elm_library(
     name = "frontend_pages",
     srcs = [
         "Page.elm",
+        "Page/Command.elm",
         "Page/Directory.elm",
         "Page/NotFound.elm",
         "Page/Welcome.elm",
