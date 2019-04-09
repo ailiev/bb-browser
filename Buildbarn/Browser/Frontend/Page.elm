@@ -30,10 +30,8 @@ viewPage contents =
         ]
 
 
-
--- Displays a HTTP error message in a friendly way.
-
-
+{-| Displays a HTTP error message in a friendly way.
+-}
 viewError : Http.Error -> List (Html.Html msg)
 viewError error =
     [ p []
@@ -58,10 +56,8 @@ viewError error =
     ]
 
 
-
--- Displays a message that the page is still loading.
-
-
+{-| Displays a message that the page is still loading.
+-}
 viewLoading : List (Html.Html msg)
 viewLoading =
     [ p [] [ text "Loading..." ] ]
