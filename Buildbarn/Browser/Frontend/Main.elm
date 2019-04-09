@@ -6,16 +6,16 @@ import Bootstrap.Navbar as Navbar
 import Bootstrap.Utilities.Spacing exposing (mb5, my4)
 import Browser
 import Browser.Navigation as Navigation
+import Buildbarn.Browser.Frontend.Page as Page
+import Buildbarn.Browser.Frontend.Page.Command as PageCommand
+import Buildbarn.Browser.Frontend.Page.Directory as PageDirectory
+import Buildbarn.Browser.Frontend.Page.NotFound as PageNotFound
+import Buildbarn.Browser.Frontend.Page.Welcome as PageWelcome
+import Buildbarn.Browser.Frontend.Route as Route
 import Html exposing (a, h1, text)
 import Html.Attributes exposing (class, href)
-import Page
-import Page.Command
-import Page.Directory
-import Page.NotFound
-import Page.Welcome
 import Platform.Cmd
 import Platform.Sub
-import Route
 import Url exposing (Url)
 
 
@@ -24,8 +24,8 @@ import Url exposing (Url)
 
 
 type CurrentPage
-    = Command Page.Command.Model
-    | Directory Page.Directory.Model
+    = Command PageCommand.Model
+    | Directory PageDirectory.Model
     | NotFound
     | Welcome
 
@@ -58,11 +58,11 @@ changeRouteTo maybeRoute model =
             ( { model | currentPage = NotFound }, Cmd.none )
 
         Just (Route.Command digest) ->
-            Page.Command.init digest
+            PageCommand.init digest
                 |> updateWith Command GotCommandMsg model
 
         Just (Route.Directory digest) ->
-            Page.Directory.init digest
+            PageDirectory.init digest
                 |> updateWith Directory GotDirectoryMsg model
 
         Just (Route.Tree _) ->
@@ -82,8 +82,8 @@ changeRouteTo maybeRoute model =
 type Msg
     = ChangedUrl Url
     | ClickedLink Browser.UrlRequest
-    | GotCommandMsg Page.Command.Msg
-    | GotDirectoryMsg Page.Directory.Msg
+    | GotCommandMsg PageCommand.Msg
+    | GotDirectoryMsg PageDirectory.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -113,11 +113,11 @@ update msg model =
                     )
 
         ( GotCommandMsg subMsg, Command subModel ) ->
-            Page.Command.update subMsg subModel
+            PageCommand.update subMsg subModel
                 |> updateWith Command GotCommandMsg model
 
         ( GotDirectoryMsg subMsg, Directory subModel ) ->
-            Page.Directory.update subMsg subModel
+            PageDirectory.update subMsg subModel
                 |> updateWith Directory GotDirectoryMsg model
 
         -- Ignore invalid message/model pairs.
@@ -153,16 +153,16 @@ view : Model -> Browser.Document Msg
 view model =
     case model.currentPage of
         Command subModel ->
-            viewPage <| Page.Command.view subModel
+            viewPage <| PageCommand.view subModel
 
         Directory subModel ->
-            viewPage <| Page.Directory.view subModel
+            viewPage <| PageDirectory.view subModel
 
         NotFound ->
-            viewPage Page.NotFound.view
+            viewPage PageNotFound.view
 
         Welcome ->
-            viewPage Page.Welcome.view
+            viewPage PageWelcome.view
 
 
 

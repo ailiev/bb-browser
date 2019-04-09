@@ -7,7 +7,7 @@ elm_proto_library(
 )
 
 elm_library(
-    name = "frontend_pages",
+    name = "libFrontend",
     srcs = [
         "Page.elm",
         "Page/Command.elm",
@@ -16,7 +16,6 @@ elm_library(
         "Page/Welcome.elm",
         "Route.elm",
     ],
-    strip_import_prefix = "cmd/bb_browser/frontend",
     deps = [
         ":remote_execution_elm_proto",
         "@elm_package_elm_html",
@@ -26,11 +25,11 @@ elm_library(
 )
 
 elm_binary(
-    name = "frontend",
+    name = "Frontend",
     main = "Main.elm",
     visibility = ["//visibility:public"],
     deps = [
-        ":frontend_pages",
+        ":libFrontend",
         "@elm_package_elm_browser",
     ],
 )

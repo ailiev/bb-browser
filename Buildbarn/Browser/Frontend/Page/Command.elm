@@ -1,15 +1,15 @@
-module Page.Command exposing (Model, Msg, init, update, view)
+module Buildbarn.Browser.Frontend.Page.Command exposing (Model, Msg, init, update, view)
 
 import Bootstrap.Button as Button
 import Bootstrap.Table as Table
 import Build.Bazel.Remote.Execution.V2.Remote_execution as Remote_execution
+import Buildbarn.Browser.Frontend.Page as Page
+import Buildbarn.Browser.Frontend.Route as Route
 import Bytes
 import Bytes.Decode
 import Html exposing (a, p, text)
 import Html.Attributes exposing (class, href, style)
 import Http
-import Page
-import Route
 import Url.Builder
 
 

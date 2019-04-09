@@ -1,8 +1,8 @@
-module Page.Welcome exposing (view)
+module Buildbarn.Browser.Frontend.Page.Welcome exposing (view)
 
+import Buildbarn.Browser.Frontend.Page as Page
 import Html exposing (a, br, li, p, span, text, ul)
 import Html.Attributes exposing (class, href)
-import Page
 
 
 {-| List entry on the welcome page that gives a description of a URL

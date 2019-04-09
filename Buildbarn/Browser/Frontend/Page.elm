@@ -1,4 +1,4 @@
-module Page exposing (Page)
+module Buildbarn.Browser.Frontend.Page exposing (Page)
 
 import Html
 

@@ -1,4 +1,4 @@
-module Route exposing (Digest, Route(..), fromUrl)
+module Buildbarn.Browser.Frontend.Route exposing (Digest, Route(..), fromUrl)
 
 import Url
 import Url.Parser as Parser exposing ((</>))
@@ -30,6 +30,7 @@ parser =
         [ Parser.map Action (Parser.s "action" </> digestParser)
         , Parser.map Command (Parser.s "command" </> digestParser)
         , Parser.map Directory (Parser.s "directory" </> digestParser)
+
         -- TODO(edsch): Parse the remainder of the path.
         , Parser.map Tree (Parser.s "tree" </> digestParser)
         , Parser.map UncachedActionResult (Parser.s "uncached_action_result" </> digestParser)

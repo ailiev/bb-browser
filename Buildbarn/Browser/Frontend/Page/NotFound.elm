@@ -1,7 +1,7 @@
-module Page.NotFound exposing (view)
+module Buildbarn.Browser.Frontend.Page.NotFound exposing (view)
 
+import Buildbarn.Browser.Frontend.Page as Page
 import Html exposing (p, text)
-import Page
 
 
 view : Page.Page msg
