@@ -3,6 +3,7 @@ module Buildbarn.Browser.Frontend.Page.Command exposing (Model, Msg, init, updat
 import Bootstrap.Button as Button
 import Bootstrap.Table as Table
 import Build.Bazel.Remote.Execution.V2.Remote_execution as Remote_execution
+import Buildbarn.Browser.Frontend.Api as Api
 import Buildbarn.Browser.Frontend.Page as Page
 import Buildbarn.Browser.Frontend.Route as Route
 import Bytes
@@ -10,7 +11,6 @@ import Bytes.Decode
 import Html exposing (a, p, text)
 import Html.Attributes exposing (class, href, style)
 import Http
-import Url.Builder
 
 
 
@@ -26,18 +26,7 @@ type Model
 init : Route.Digest -> ( Model, Cmd Msg )
 init digest =
     ( Loading
-    , Http.get
-        { url =
-            Url.Builder.absolute
-                [ "api"
-                , "get_command"
-                ]
-                [ Url.Builder.string "instance" digest.instance
-                , Url.Builder.string "hash" digest.hash
-                , Url.Builder.int "size_bytes" digest.sizeBytes
-                ]
-        , expect = Http.expectJson GotCommand Remote_execution.commandDecoder
-        }
+    , Api.getMessage "command" GotCommand Remote_execution.commandDecoder digest
     )
 
 

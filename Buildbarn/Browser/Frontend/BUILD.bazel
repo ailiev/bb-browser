@@ -9,6 +9,7 @@ elm_proto_library(
 elm_library(
     name = "libFrontend",
     srcs = [
+        "Api.elm",
         "Page.elm",
         "Page/Command.elm",
         "Page/Directory.elm",

@@ -3,6 +3,7 @@ module Buildbarn.Browser.Frontend.Page.Directory exposing (Model, Msg, init, upd
 import Bootstrap.Button as Button
 import Bootstrap.Table as Table
 import Build.Bazel.Remote.Execution.V2.Remote_execution as Remote_execution
+import Buildbarn.Browser.Frontend.Api as Api
 import Buildbarn.Browser.Frontend.Page as Page
 import Buildbarn.Browser.Frontend.Route as Route
 import Bytes
@@ -26,18 +27,7 @@ type Model
 init : Route.Digest -> ( Model, Cmd Msg )
 init digest =
     ( Loading
-    , Http.get
-        { url =
-            Url.Builder.absolute
-                [ "api"
-                , "get_directory"
-                ]
-                [ Url.Builder.string "instance" digest.instance
-                , Url.Builder.string "hash" digest.hash
-                , Url.Builder.int "size_bytes" digest.sizeBytes
-                ]
-        , expect = Http.expectJson (GotDirectory digest) Remote_execution.directoryDecoder
-        }
+    , Api.getMessage "directory" (GotDirectory digest) Remote_execution.directoryDecoder digest
     )
 
 
