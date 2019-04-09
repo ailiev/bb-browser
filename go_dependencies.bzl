@@ -48,5 +48,6 @@ def bb_browser_go_dependencies():
             "@com_github_buildbarn_bb_browser//:patches/com_github_tiziano88_elm_protobuf/empty-output.diff",
             "@com_github_buildbarn_bb_browser//:patches/com_github_tiziano88_elm_protobuf/proto2.diff",
             "@com_github_buildbarn_bb_browser//:patches/com_github_tiziano88_elm_protobuf/recursive-type.diff",
+            "@com_github_buildbarn_bb_browser//:patches/com_github_tiziano88_elm_protobuf/silent.diff",
         ],
     )
