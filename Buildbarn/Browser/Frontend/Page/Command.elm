@@ -1,10 +1,11 @@
 module Buildbarn.Browser.Frontend.Page.Command exposing (Model, Msg, init, update, view)
 
+import Bootstrap.Utilities.Spacing exposing (my4)
 import Build.Bazel.Remote.Execution.V2.Remote_execution as Remote_execution
 import Buildbarn.Browser.Frontend.Api as Api
 import Buildbarn.Browser.Frontend.Page as Page
 import Buildbarn.Browser.Frontend.Route as Route
-import Html exposing (b, br, table, td, text, th, tr)
+import Html exposing (b, br, h2, table, td, text, th, tr)
 import Html.Attributes exposing (class, style)
 import Http
 
@@ -63,7 +64,7 @@ view model =
                 Page.viewLoading
 
             Success command ->
-                [ table [ class "table", style "table-layout" "fixed" ]
+                [ table [ class "table", style "table-layout" "fixed" ] <|
                     [ tr []
                         [ th [ style "width" "25%" ] [ text "Arguments:" ]
                         , td [ class "text-monospace", style "width" "75%", style "overflow-x" "scroll" ] <|
@@ -107,5 +108,25 @@ view model =
                             ]
                         ]
                     ]
+                        ++ (case command.platform of
+                                Just (Remote_execution.PlatformMessage platform) ->
+                                    [ th [ style "width" "25%" ] [ text "Environment variables:" ]
+                                    , platform.properties
+                                        |> List.map
+                                            (\(Remote_execution.Platform_PropertyMessage property) ->
+                                                [ b [] [ text property.name ]
+                                                , text " = "
+                                                , text property.value
+                                                ]
+                                            )
+                                        |> List.intersperse [ br [] [] ]
+                                        |> List.concat
+                                        |> td [ style "width" "75%" ]
+                                    ]
+
+                                Nothing ->
+                                    []
+                           )
+                , h2 [ my4 ] [ text "Output files" ]
                 ]
     }
