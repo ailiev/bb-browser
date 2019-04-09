@@ -4,6 +4,8 @@ import Build.Bazel.Remote.Execution.V2.Remote_execution as Remote_execution
 import Buildbarn.Browser.Frontend.Api as Api
 import Buildbarn.Browser.Frontend.Page as Page
 import Buildbarn.Browser.Frontend.Route as Route
+import Html exposing (b, br, table, td, text, th, tr)
+import Html.Attributes exposing (class, style)
 import Http
 
 
@@ -60,6 +62,50 @@ view model =
             Loading ->
                 Page.viewLoading
 
-            Success _ ->
-                []
+            Success command ->
+                [ table [ class "table", style "table-layout" "fixed" ]
+                    [ tr []
+                        [ th [ style "width" "25%" ] [ text "Arguments:" ]
+                        , td [ class "text-monospace", style "width" "75%", style "overflow-x" "scroll" ] <|
+                            case command.arguments of
+                                first :: rest ->
+                                    b [] [ text first ]
+                                        :: List.concatMap
+                                            (\argument ->
+                                                [ text " "
+                                                , text argument
+                                                ]
+                                            )
+                                            rest
+
+                                [] ->
+                                    []
+                        ]
+                    , tr []
+                        [ th [ style "width" "25%" ] [ text "Environment variables:" ]
+                        , command.environmentVariables
+                            |> List.map
+                                (\(Remote_execution.Command_EnvironmentVariableMessage env) ->
+                                    [ b [] [ text env.name ]
+                                    , text "="
+                                    , text env.value
+                                    ]
+                                )
+                            |> List.intersperse [ br [] [] ]
+                            |> List.concat
+                            |> td [ class "text-monospace", style "width" "75%", style "overflow-x" "scroll" ]
+                        ]
+                    , tr []
+                        [ th [ style "width" "25%" ] [ text "Working directory:" ]
+                        , td [ class "text-monospace", style "width" "75%" ]
+                            [ text <|
+                                if String.isEmpty command.workingDirectory then
+                                    "."
+
+                                else
+                                    command.workingDirectory
+                            ]
+                        ]
+                    ]
+                ]
     }
