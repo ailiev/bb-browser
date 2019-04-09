@@ -10,7 +10,7 @@ getMessage : String -> (Result Http.Error a -> msg) -> JD.Decoder a -> Route.Dig
 getMessage endpoint toMsg decoder digest =
     Http.get
         { url =
-            Url.Builder.absolute
+            Url.Builder.relative
                 [ "api", "get_" ++ endpoint ]
                 [ Url.Builder.string "instance" digest.instance
                 , Url.Builder.string "hash" digest.hash
