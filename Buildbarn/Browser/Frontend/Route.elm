@@ -20,19 +20,18 @@ type Route
     = Action Digest
     | Command Digest
     | Directory Digest
-    | Tree Digest
+    | Tree Digest (List String)
     | UncachedActionResult Digest
     | Welcome
 
 
+parser : Parser.Parser (Route -> a) a
 parser =
     Parser.oneOf
         [ Parser.map Action (Parser.s "action" </> digestParser)
         , Parser.map Command (Parser.s "command" </> digestParser)
         , Parser.map Directory (Parser.s "directory" </> digestParser)
-
-        -- TODO(edsch): Parse the remainder of the path.
-        , Parser.map Tree (Parser.s "tree" </> digestParser)
+        , Parser.map Tree (Parser.s "tree" </> digestParser </> Parser.remainder)
         , Parser.map UncachedActionResult (Parser.s "uncached_action_result" </> digestParser)
         , Parser.map Welcome Parser.top
         ]

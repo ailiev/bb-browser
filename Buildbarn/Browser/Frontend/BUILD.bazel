@@ -14,6 +14,7 @@ elm_library(
         "Page/Command.elm",
         "Page/Directory.elm",
         "Page/NotFound.elm",
+        "Page/Tree.elm",
         "Page/Welcome.elm",
         "Route.elm",
     ],

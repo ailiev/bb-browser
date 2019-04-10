@@ -6,6 +6,7 @@ import Buildbarn.Browser.Frontend.Page as Page
 import Buildbarn.Browser.Frontend.Page.Command as PageCommand
 import Buildbarn.Browser.Frontend.Page.Directory as PageDirectory
 import Buildbarn.Browser.Frontend.Page.NotFound as PageNotFound
+import Buildbarn.Browser.Frontend.Page.Tree as PageTree
 import Buildbarn.Browser.Frontend.Page.Welcome as PageWelcome
 import Buildbarn.Browser.Frontend.Route as Route
 import Platform.Cmd
@@ -21,6 +22,7 @@ type CurrentPage
     = Command PageCommand.Model
     | Directory PageDirectory.Model
     | NotFound
+    | Tree PageTree.Model
     | Welcome
 
 
@@ -59,8 +61,9 @@ changeRouteTo maybeRoute model =
             PageDirectory.init digest
                 |> updateWith Directory GotDirectoryMsg model
 
-        Just (Route.Tree _) ->
-            ( { model | currentPage = NotFound }, Cmd.none )
+        Just (Route.Tree digest path) ->
+            PageTree.init digest path
+                |> updateWith Tree GotTreeMsg model
 
         Just (Route.UncachedActionResult _) ->
             ( { model | currentPage = NotFound }, Cmd.none )
@@ -78,6 +81,7 @@ type Msg
     | ClickedLink Browser.UrlRequest
     | GotCommandMsg PageCommand.Msg
     | GotDirectoryMsg PageDirectory.Msg
+    | GotTreeMsg PageTree.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -114,6 +118,10 @@ update msg model =
             PageDirectory.update subMsg subModel
                 |> updateWith Directory GotDirectoryMsg model
 
+        ( GotTreeMsg subMsg, Tree subModel ) ->
+            PageTree.update subMsg subModel
+                |> updateWith Tree GotTreeMsg model
+
         -- Ignore invalid message/model pairs.
         ( _, _ ) ->
             ( model, Cmd.none )
@@ -141,6 +149,9 @@ view model =
 
         NotFound ->
             Page.viewPage PageNotFound.view
+
+        Tree subModel ->
+            Page.viewPage <| PageTree.view subModel
 
         Welcome ->
             Page.viewPage PageWelcome.view

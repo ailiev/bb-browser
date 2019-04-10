@@ -1,28 +1,37 @@
 package main
 
 import (
+	"context"
 	"log"
-	"strconv"
 	"net/http"
+	"strconv"
 
 	remoteexecution "github.com/bazelbuild/remote-apis/build/bazel/remote/execution/v2"
 	"github.com/buildbarn/bb-storage/pkg/cas"
 	"github.com/buildbarn/bb-storage/pkg/util"
 	"github.com/golang/protobuf/jsonpb"
+	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/mux"
 )
 
 type APIService struct {
-	contentAddressableStorage cas.ContentAddressableStorage
-	marshaler                 jsonpb.Marshaler
+	marshaler jsonpb.Marshaler
 }
 
 func NewAPIService(contentAddressableStorage cas.ContentAddressableStorage, router *mux.Router) *APIService {
-	s := &APIService{
-		contentAddressableStorage: contentAddressableStorage,
-	}
-	router.HandleFunc("/api/get_command", s.handleGetCommand)
-	router.HandleFunc("/api/get_directory", s.handleGetDirectory)
+	s := &APIService{}
+	router.HandleFunc("/api/get_command", s.handleGetObject(
+		func(ctx context.Context, digest *util.Digest) (proto.Message, error) {
+			return contentAddressableStorage.GetCommand(ctx, digest)
+		}))
+	router.HandleFunc("/api/get_directory", s.handleGetObject(
+		func(ctx context.Context, digest *util.Digest) (proto.Message, error) {
+			return contentAddressableStorage.GetDirectory(ctx, digest)
+		}))
+	router.HandleFunc("/api/get_tree", s.handleGetObject(
+		func(ctx context.Context, digest *util.Digest) (proto.Message, error) {
+			return contentAddressableStorage.GetTree(ctx, digest)
+		}))
 	return s
 }
 
@@ -40,34 +49,20 @@ func getDigestFromQueryParameters(req *http.Request) (*util.Digest, error) {
 		})
 }
 
-func (s *APIService) handleGetCommand(w http.ResponseWriter, req *http.Request) {
-	digest, err := getDigestFromQueryParameters(req)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	directory, err := s.contentAddressableStorage.GetCommand(req.Context(), digest)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	if err := s.marshaler.Marshal(w, directory); err != nil {
-		log.Print(err)
-	}
-}
-
-func (s *APIService) handleGetDirectory(w http.ResponseWriter, req *http.Request) {
-	digest, err := getDigestFromQueryParameters(req)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	directory, err := s.contentAddressableStorage.GetDirectory(req.Context(), digest)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	if err := s.marshaler.Marshal(w, directory); err != nil {
-		log.Print(err)
+func (s *APIService) handleGetObject(getter func(ctx context.Context, digest *util.Digest) (proto.Message, error)) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, req *http.Request) {
+		digest, err := getDigestFromQueryParameters(req)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		message, err := getter(req.Context(), digest)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		if err := s.marshaler.Marshal(w, message); err != nil {
+			log.Print(err)
+		}
 	}
 }
