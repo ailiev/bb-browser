@@ -46,9 +46,9 @@ http_archive(
 
 http_archive(
     name = "com_github_edschouten_rules_elm",
-    sha256 = "28394af719d982949a3d5ea93a09640ab5a76ace9d95aeb7c8f1853c4eefbda1",
-    strip_prefix = "rules_elm-e24901ee202e1df8c7a608e1403fa02344ce308e",
-    urls = ["https://github.com/EdSchouten/rules_elm/archive/e24901ee202e1df8c7a608e1403fa02344ce308e.tar.gz"],
+    sha256 = "27262d1b353f80037af2ac8b3fc48ee94b2d614b8d2a8863d2481f399efdc8bf",
+    strip_prefix = "rules_elm-4660395f27fa41e8c159600f0b7ab35981d6e95e",
+    urls = ["https://github.com/EdSchouten/rules_elm/archive/4660395f27fa41e8c159600f0b7ab35981d6e95e.tar.gz"],
 )
 
 http_archive(
@@ -169,6 +169,7 @@ elm_repository(
 
 elm_repository(
     name = "elm_package_elm_url",
+    patches = ["//:patches/elm_package_elm_url/parse-remainder.diff"],
     sha256 = "840e9d45d8a9bd64a7f76421a1de2518e02c7cbea7ed42efd380b4e875e9682b",
     strip_prefix = "url-1.0.0",
     urls = ["https://github.com/elm/url/archive/1.0.0.tar.gz"],

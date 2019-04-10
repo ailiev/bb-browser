@@ -1,0 +1,37 @@
+diff --git src/Url/Parser.elm src/Url/Parser.elm
+index e3f1ec3..e03fbed 100644
+--- src/Url/Parser.elm
++++ src/Url/Parser.elm
+@@ -1,6 +1,6 @@
+ module Url.Parser exposing
+   ( Parser, string, int, s
+-  , (</>), map, oneOf, top, custom
++  , (</>), map, oneOf, top, custom, remainder
+   , (<?>), query
+   , fragment
+   , parse
+@@ -23,7 +23,7 @@ This module is primarily for parsing the `path` part.
+ @docs Parser, string, int, s
+ 
+ # Path
+-@docs (</>), map, oneOf, top, custom
++@docs (</>), map, oneOf, top, custom, remainder
+ 
+ # Query
+ @docs (<?>), query
+@@ -157,6 +157,15 @@ custom tipe stringToSomething =
+             []
+ 
+ 
++{-| Parse the full remainder of the path as a `List String`.
++-}
++remainder : Parser (List String -> a) a
++remainder =
++    Parser <|
++        \{ visited, unvisited, params, frag, value } ->
++            [ State (List.reverse unvisited ++ visited) [] params frag (value unvisited) ]
++
++
+ 
+ -- COMBINING PARSERS
+ 
