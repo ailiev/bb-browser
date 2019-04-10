@@ -27,7 +27,7 @@
 This action could not be found.
 {{end}}
 
-<h2 class="my-4">Command{{if .Action}}<sup><a href="/command/{{$instance}}/{{.Action.CommandDigest.Hash}}/{{.Action.CommandDigest.SizeBytes}}/">*</a></sup>{{end}}</h2>
+<h2 class="my-4">Command{{if .Action}}<sup><a href="/#command/{{$instance}}/{{.Action.CommandDigest.Hash}}/{{.Action.CommandDigest.SizeBytes}}">*</a></sup>{{end}}</h2>
 
 {{if .Command}}
 {{template "view_command.html" .Command}}

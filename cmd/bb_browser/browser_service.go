@@ -84,7 +84,6 @@ func NewBrowserService(contentAddressableStorage cas.ContentAddressableStorage, 
 	router.HandleFunc("/", s.handleWelcome)
 	router.HandleFunc("/action/{instance}/{hash}/{sizeBytes}/", s.handleAction)
 	router.HandleFunc("/build_events/{instance}/{invocationID}", s.handleBuildEvents)
-	router.HandleFunc("/command/{instance}/{hash}/{sizeBytes}/", s.handleCommand)
 	router.HandleFunc("/directory/{instance}/{hash}/{sizeBytes}/", s.handleDirectory)
 	router.HandleFunc("/file/{instance}/{hash}/{sizeBytes}/{name}", s.handleFile)
 	router.HandleFunc("/tree/{instance}/{hash}/{sizeBytes}/{subdirectory:(?:.*/)?}", s.handleTree)
@@ -453,25 +452,6 @@ func (s *BrowserService) handleActionCommon(w http.ResponseWriter, req *http.Req
 	}
 
 	if err := s.templates.ExecuteTemplate(w, "page_action.html", actionInfo); err != nil {
-		log.Print(err)
-	}
-}
-
-func (s *BrowserService) handleCommand(w http.ResponseWriter, req *http.Request) {
-	digest, err := getDigestFromRequest(req)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	ctx := extractContextFromRequest(req)
-	command, err := s.contentAddressableStorage.GetCommand(ctx, digest)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	if err := s.templates.ExecuteTemplate(w, "page_command.html", command); err != nil {
 		log.Print(err)
 	}
 }

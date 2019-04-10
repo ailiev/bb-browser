@@ -40,7 +40,7 @@ view =
                 , a [ href "https://docs.bazel.build/versions/master/build-event-protocol.html" ] [ text "Build Event Stream" ]
                 , text ".  The stream is stored in one or more objects in the CAS. An AC entry refers to the objects stored in the CAS."
                 ]
-            , urlPattern "/command/${instance}/${hash}/${size}/"
+            , urlPattern "/#command/${instance}/${hash}/${size}"
                 [ text "Displays information about a Command stored in the CAS." ]
             , urlPattern "/#directory/${instance}/${hash}/${size}"
                 [ text "Displays information about a Directory (input directory) stored in the CAS." ]
