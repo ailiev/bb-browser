@@ -1,7 +1,7 @@
 module Buildbarn.Browser.Frontend.Page.Command exposing (Model, Msg, init, update, view)
 
 import Bootstrap.Utilities.Spacing exposing (my4)
-import Build.Bazel.Remote.Execution.V2.Remote_execution as Remote_execution
+import Build.Bazel.Remote.Execution.V2.Remote_execution as REv2
 import Buildbarn.Browser.Frontend.Api as Api
 import Buildbarn.Browser.Frontend.Page as Page
 import Buildbarn.Browser.Frontend.Route as Route
@@ -18,13 +18,13 @@ import Http
 type Model
     = Failure Http.Error
     | Loading
-    | Success Remote_execution.Command
+    | Success REv2.Command
 
 
 init : Route.Digest -> ( Model, Cmd Msg )
 init digest =
     ( Loading
-    , Api.getMessage "command" GotCommand Remote_execution.commandDecoder digest
+    , Api.getMessage "command" GotCommand REv2.commandDecoder digest
     )
 
 
@@ -33,7 +33,7 @@ init digest =
 
 
 type Msg
-    = GotCommand (Result Http.Error Remote_execution.Command)
+    = GotCommand (Result Http.Error REv2.Command)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -87,7 +87,7 @@ view model =
                         [ th [ style "width" "25%" ] [ text "Environment variables:" ]
                         , command.environmentVariables
                             |> List.map
-                                (\(Remote_execution.Command_EnvironmentVariableMessage env) ->
+                                (\(REv2.Command_EnvironmentVariableMessage env) ->
                                     [ b [] [ text env.name ]
                                     , text "="
                                     , text <| Shell.quote env.value
@@ -110,11 +110,11 @@ view model =
                         ]
                     ]
                         ++ (case command.platform of
-                                Just (Remote_execution.PlatformMessage platform) ->
+                                Just (REv2.PlatformMessage platform) ->
                                     [ th [ style "width" "25%" ] [ text "Environment variables:" ]
                                     , platform.properties
                                         |> List.map
-                                            (\(Remote_execution.Platform_PropertyMessage property) ->
+                                            (\(REv2.Platform_PropertyMessage property) ->
                                                 [ b [] [ text property.name ]
                                                 , text " = "
                                                 , text property.value

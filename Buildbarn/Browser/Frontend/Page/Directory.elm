@@ -2,7 +2,7 @@ module Buildbarn.Browser.Frontend.Page.Directory exposing (Model, Msg, init, upd
 
 import Bootstrap.Button as Button
 import Bootstrap.Table as Table
-import Build.Bazel.Remote.Execution.V2.Remote_execution as Remote_execution
+import Build.Bazel.Remote.Execution.V2.Remote_execution as REv2
 import Buildbarn.Browser.Frontend.Api as Api
 import Buildbarn.Browser.Frontend.Page as Page
 import Buildbarn.Browser.Frontend.Route as Route
@@ -19,13 +19,13 @@ import Url.Builder
 type Model
     = Failure Http.Error
     | Loading
-    | Success Route.Digest Remote_execution.Directory
+    | Success Route.Digest REv2.Directory
 
 
 init : Route.Digest -> ( Model, Cmd Msg )
 init digest =
     ( Loading
-    , Api.getMessage "directory" (GotDirectory digest) Remote_execution.directoryDecoder digest
+    , Api.getMessage "directory" (GotDirectory digest) REv2.directoryDecoder digest
     )
 
 
@@ -34,7 +34,7 @@ init digest =
 
 
 type Msg
-    = GotDirectory Route.Digest (Result Http.Error Remote_execution.Directory)
+    = GotDirectory Route.Digest (Result Http.Error REv2.Directory)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -53,7 +53,7 @@ update msg model =
 -- VIEW
 
 
-viewDirectoryEntry : String -> Maybe Remote_execution.DigestMessage -> List (Html.Html msg) -> Table.Row msg
+viewDirectoryEntry : String -> Maybe REv2.DigestMessage -> List (Html.Html msg) -> Table.Row msg
 viewDirectoryEntry permissions digest filename =
     Table.tr [ Table.rowAttr <| class "text-monospace" ]
         [ Table.td [] [ text permissions ]
@@ -62,7 +62,7 @@ viewDirectoryEntry permissions digest filename =
                 Nothing ->
                     []
 
-                Just (Remote_execution.DigestMessage d) ->
+                Just (REv2.DigestMessage d) ->
                     [ text <| String.fromInt d.sizeBytes ]
             )
         , Table.td [] filename
@@ -91,7 +91,7 @@ view model =
                     , Table.tbody [] <|
                         (directory.directories
                             |> List.map
-                                (\(Remote_execution.DirectoryNodeMessage entry) ->
+                                (\(REv2.DirectoryNodeMessage entry) ->
                                     viewDirectoryEntry
                                         "drwxr‑xr‑x"
                                         entry.digest
@@ -99,7 +99,7 @@ view model =
                                             Nothing ->
                                                 text entry.name
 
-                                            Just (Remote_execution.DigestMessage childDigest) ->
+                                            Just (REv2.DigestMessage childDigest) ->
                                                 a
                                                     [ href <|
                                                         "#directory/"
@@ -116,7 +116,7 @@ view model =
                         )
                             ++ (directory.symlinks
                                     |> List.map
-                                        (\(Remote_execution.SymlinkNodeMessage entry) ->
+                                        (\(REv2.SymlinkNodeMessage entry) ->
                                             viewDirectoryEntry
                                                 "lrwxrwxrwx"
                                                 Nothing
@@ -128,7 +128,7 @@ view model =
                                )
                             ++ (directory.files
                                     |> List.map
-                                        (\(Remote_execution.FileNodeMessage entry) ->
+                                        (\(REv2.FileNodeMessage entry) ->
                                             viewDirectoryEntry
                                                 (if entry.isExecutable then
                                                     "‑r‑xr‑xr‑x"
@@ -141,7 +141,7 @@ view model =
                                                     Nothing ->
                                                         text entry.name
 
-                                                    Just (Remote_execution.DigestMessage childDigest) ->
+                                                    Just (REv2.DigestMessage childDigest) ->
                                                         a
                                                             [ href <|
                                                                 Url.Builder.absolute
