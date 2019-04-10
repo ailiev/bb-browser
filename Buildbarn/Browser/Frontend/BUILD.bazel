@@ -1,4 +1,4 @@
-load("@com_github_edschouten_rules_elm//elm:def.bzl", "elm_binary", "elm_library")
+load("@com_github_edschouten_rules_elm//elm:def.bzl", "elm_binary", "elm_library", "elm_test")
 load("@com_github_edschouten_rules_elm//proto:def.bzl", "elm_proto_library")
 
 elm_proto_library(
@@ -23,6 +23,20 @@ elm_library(
         "@elm_package_elm_html",
         "@elm_package_elm_http",
         "@elm_package_rundis_elm_bootstrap",
+    ],
+)
+
+elm_library(
+    name = "Shell",
+    srcs = ["Shell.elm"],
+)
+
+elm_test(
+    name = "ShellTest",
+    main = "ShellTest.elm",
+    deps = [
+        ":Shell",
+        "@elm_package_elm_explorations_test",
     ],
 )
 

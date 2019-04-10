@@ -13,6 +13,12 @@ http_archive(
 )
 
 http_archive(
+    name = "build_bazel_rules_nodejs",
+    sha256 = "fb87ed5965cef93188af9a7287511639403f4b0da418961ce6defb9dcf658f51",
+    urls = ["https://github.com/bazelbuild/rules_nodejs/releases/download/0.27.7/rules_nodejs-0.27.7.tar.gz"],
+)
+
+http_archive(
     name = "io_bazel_rules_docker",
     sha256 = "aed1c249d4ec8f703edddf35cbe9dfaca0b5f5ea6e4cd9e83e99f3b0d1136c3d",
     strip_prefix = "rules_docker-0.7.0",
@@ -106,6 +112,13 @@ elm_repository(
 )
 
 elm_repository(
+    name = "elm_package_elm_explorations_test",
+    sha256 = "1233c0cb3d663630b939edb058d904e1275dfae0813ddf0bb63459d0cdf8bfe9",
+    strip_prefix = "test-1.2.1",
+    urls = ["https://github.com/elm-explorations/test/archive/1.2.1.tar.gz"],
+)
+
+elm_repository(
     name = "elm_package_elm_file",
     sha256 = "c85b4025e12c1bf2dee9e4d853459ead7d1fa917304adfa2af27d116c86292e6",
     strip_prefix = "file-1.0.5",
@@ -131,6 +144,13 @@ elm_repository(
     sha256 = "d0635f33137e4ad3fc323f96ba280e45dc41afa51076c53d9f04fd92c2cf5c4e",
     strip_prefix = "json-1.1.3",
     urls = ["https://github.com/elm/json/archive/1.1.3.tar.gz"],
+)
+
+elm_repository(
+    name = "elm_package_elm_random",
+    sha256 = "b4b9dc99d5a064bc607684dd158199208bce51c0521b7e8a515c365e0a11168d",
+    strip_prefix = "random-1.0.0",
+    urls = ["https://github.com/elm/random/archive/1.0.0.tar.gz"],
 )
 
 elm_repository(
@@ -207,3 +227,7 @@ http_archive(
     strip_prefix = "googleapis-143084a2624b6591ee1f9d23e7f5241856642f4d",
     urls = ["https://github.com/googleapis/googleapis/archive/143084a2624b6591ee1f9d23e7f5241856642f4d.zip"],
 )
+
+load("@build_bazel_rules_nodejs//:defs.bzl", "node_repositories")
+
+node_repositories()
