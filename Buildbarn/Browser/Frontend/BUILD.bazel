@@ -2,7 +2,7 @@ load("@com_github_edschouten_rules_elm//elm:def.bzl", "elm_binary", "elm_library
 load("@com_github_edschouten_rules_elm//proto:def.bzl", "elm_proto_library")
 
 elm_proto_library(
-    name = "remote_execution_elm_proto",
+    name = "REv2",
     proto = "@com_github_bazelbuild_remote_apis//build/bazel/remote/execution/v2:remote_execution_proto",
 )
 
@@ -18,8 +18,8 @@ elm_library(
         "Route.elm",
     ],
     deps = [
+        ":REv2",
         ":Shell",
-        ":remote_execution_elm_proto",
         "@elm_package_elm_browser",
         "@elm_package_elm_html",
         "@elm_package_elm_http",
