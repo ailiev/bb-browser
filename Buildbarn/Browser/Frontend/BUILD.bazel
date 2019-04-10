@@ -18,6 +18,7 @@ elm_library(
         "Route.elm",
     ],
     deps = [
+        ":Shell",
         ":remote_execution_elm_proto",
         "@elm_package_elm_browser",
         "@elm_package_elm_html",

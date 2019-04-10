@@ -5,6 +5,7 @@ import Build.Bazel.Remote.Execution.V2.Remote_execution as Remote_execution
 import Buildbarn.Browser.Frontend.Api as Api
 import Buildbarn.Browser.Frontend.Page as Page
 import Buildbarn.Browser.Frontend.Route as Route
+import Buildbarn.Browser.Frontend.Shell as Shell
 import Html exposing (b, br, h2, table, td, text, th, tr)
 import Html.Attributes exposing (class, style)
 import Http
@@ -68,7 +69,7 @@ view model =
                     [ tr []
                         [ th [ style "width" "25%" ] [ text "Arguments:" ]
                         , td [ class "text-monospace", style "width" "75%", style "overflow-x" "scroll" ] <|
-                            case command.arguments of
+                            case command.arguments |> List.map Shell.quote of
                                 first :: rest ->
                                     b [] [ text first ]
                                         :: List.concatMap
@@ -89,7 +90,7 @@ view model =
                                 (\(Remote_execution.Command_EnvironmentVariableMessage env) ->
                                     [ b [] [ text env.name ]
                                     , text "="
-                                    , text env.value
+                                    , text <| Shell.quote env.value
                                     ]
                                 )
                             |> List.intersperse [ br [] [] ]
