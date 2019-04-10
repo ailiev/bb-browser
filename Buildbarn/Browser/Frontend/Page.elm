@@ -1,6 +1,8 @@
 module Buildbarn.Browser.Frontend.Page exposing
     ( Page
     , viewDirectory
+    , viewDirectoryListing
+    , viewDirectoryListingEntry
     , viewError
     , viewLoading
     , viewPage
@@ -44,11 +46,50 @@ viewPage contents =
 viewDirectory : Route.Digest -> REv2.Directory -> List (Html.Html msg)
 viewDirectory digest directory =
     [ viewDirectoryListing <|
-        (directory.directories
-            |> List.map
-                (\(REv2.DirectoryNodeMessage entry) ->
+        List.map
+            (\(REv2.DirectoryNodeMessage entry) ->
+                viewDirectoryListingEntry
+                    "drwxr‑xr‑x"
+                    entry.digest
+                    [ case entry.digest of
+                        Nothing ->
+                            text entry.name
+
+                        Just (REv2.DigestMessage childDigest) ->
+                            a
+                                [ href <|
+                                    "#directory/"
+                                        ++ digest.instance
+                                        ++ "/"
+                                        ++ childDigest.hash
+                                        ++ "/"
+                                        ++ String.fromInt childDigest.sizeBytes
+                                ]
+                                [ text entry.name ]
+                    , text "/"
+                    ]
+            )
+            directory.directories
+            ++ List.map
+                (\(REv2.SymlinkNodeMessage entry) ->
                     viewDirectoryListingEntry
-                        "drwxr‑xr‑x"
+                        "lrwxrwxrwx"
+                        Nothing
+                        [ text entry.name
+                        , text " → "
+                        , text entry.target
+                        ]
+                )
+                directory.symlinks
+            ++ List.map
+                (\(REv2.FileNodeMessage entry) ->
+                    viewDirectoryListingEntry
+                        (if entry.isExecutable then
+                            "‑r‑xr‑xr‑x"
+
+                         else
+                            "‑r‑‑r‑‑r‑‑"
+                        )
                         entry.digest
                         [ case entry.digest of
                             Nothing ->
@@ -57,61 +98,19 @@ viewDirectory digest directory =
                             Just (REv2.DigestMessage childDigest) ->
                                 a
                                     [ href <|
-                                        "#directory/"
-                                            ++ digest.instance
-                                            ++ "/"
-                                            ++ childDigest.hash
-                                            ++ "/"
-                                            ++ String.fromInt childDigest.sizeBytes
+                                        Url.Builder.absolute
+                                            [ "file"
+                                            , digest.instance
+                                            , childDigest.hash
+                                            , String.fromInt childDigest.sizeBytes
+                                            , entry.name
+                                            ]
+                                            []
                                     ]
                                     [ text entry.name ]
-                        , text "/"
                         ]
                 )
-        )
-            ++ (directory.symlinks
-                    |> List.map
-                        (\(REv2.SymlinkNodeMessage entry) ->
-                            viewDirectoryListingEntry
-                                "lrwxrwxrwx"
-                                Nothing
-                                [ text entry.name
-                                , text " → "
-                                , text entry.target
-                                ]
-                        )
-               )
-            ++ (directory.files
-                    |> List.map
-                        (\(REv2.FileNodeMessage entry) ->
-                            viewDirectoryListingEntry
-                                (if entry.isExecutable then
-                                    "‑r‑xr‑xr‑x"
-
-                                 else
-                                    "‑r‑‑r‑‑r‑‑"
-                                )
-                                entry.digest
-                                [ case entry.digest of
-                                    Nothing ->
-                                        text entry.name
-
-                                    Just (REv2.DigestMessage childDigest) ->
-                                        a
-                                            [ href <|
-                                                Url.Builder.absolute
-                                                    [ "file"
-                                                    , digest.instance
-                                                    , childDigest.hash
-                                                    , String.fromInt childDigest.sizeBytes
-                                                    , entry.name
-                                                    ]
-                                                    []
-                                            ]
-                                            [ text entry.name ]
-                                ]
-                        )
-               )
+                directory.files
     , Button.linkButton
         [ Button.primary
         , Button.attrs

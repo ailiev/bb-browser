@@ -129,5 +129,22 @@ view model =
                                     []
                            )
                 , h2 [ my4 ] [ text "Output files" ]
+                , Page.viewDirectoryListing <|
+                    List.map
+                        (\path ->
+                            Page.viewDirectoryListingEntry
+                                "drwxr‑xr‑x"
+                                Nothing
+                                [ text path, text "/" ]
+                        )
+                        command.outputDirectories
+                        ++ List.map
+                            (\path ->
+                                Page.viewDirectoryListingEntry
+                                    "‑rw‑r‑‑r‑‑"
+                                    Nothing
+                                    [ text path ]
+                            )
+                            command.outputFiles
                 ]
     }
