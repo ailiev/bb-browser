@@ -6,6 +6,7 @@ module Buildbarn.Browser.Frontend.Page exposing
     , viewError
     , viewLoading
     , viewPage
+    , viewShell
     )
 
 import Bootstrap.Button as Button
@@ -17,6 +18,7 @@ import Bootstrap.Utilities.Spacing exposing (mb5, my4)
 import Browser
 import Build.Bazel.Remote.Execution.V2.Remote_execution as REv2
 import Buildbarn.Browser.Frontend.Route as Route
+import Buildbarn.Browser.Frontend.Shell as Shell
 import Html exposing (a, h1, p, text)
 import Html.Attributes exposing (class, href, style)
 import Http
@@ -188,3 +190,8 @@ viewError error =
 viewLoading : List (Html.Html msg)
 viewLoading =
     [ p [] [ text "Loading..." ] ]
+
+
+viewShell : String -> String
+viewShell s =
+    s |> Shell.quote |> String.replace "-" "‑"
