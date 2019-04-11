@@ -1,5 +1,5 @@
 diff --git src/Url/Parser.elm src/Url/Parser.elm
-index e3f1ec3..cfa35fe 100644
+index e3f1ec3..4e94e08 100644
 --- src/Url/Parser.elm
 +++ src/Url/Parser.elm
 @@ -1,6 +1,6 @@
@@ -55,7 +55,7 @@ index e3f1ec3..cfa35fe 100644
      case unvisited of
        [] ->
          []
-@@ -151,12 +150,21 @@ custom tipe stringToSomething =
+@@ -151,12 +150,30 @@ custom tipe stringToSomething =
        next :: rest ->
          case stringToSomething next of
            Just nextValue ->
@@ -66,7 +66,16 @@ index e3f1ec3..cfa35fe 100644
              []
  
  
-+{-| Parse the full remainder of the path as a `List String`.
++{-| Parse all remaining path segments as a `List String`.
++
++    blog : Parser (List String -> a) a
++    blog =
++      s "blog" </> remainder
++
++    -- /blog              ==>  Just []
++    -- /blog/hello        ==>  Just [ "hello" ]
++    -- /blog/hello/world  ==>  Just [ "hello", "world" ]
++    -- /foo/bar           ==>  Nothing
 +-}
 +remainder : Parser (List String -> a) a
 +remainder =
@@ -78,7 +87,7 @@ index e3f1ec3..cfa35fe 100644
  
  -- COMBINING PARSERS
  
-@@ -205,14 +213,14 @@ slash (Parser parseBefore) (Parser parseAfter) =
+@@ -205,14 +222,14 @@ slash (Parser parseBefore) (Parser parseAfter) =
  -}
  map : a -> Parser a b -> Parser (b -> c) c
  map subValue (Parser parseArg) =
@@ -97,7 +106,7 @@ index e3f1ec3..cfa35fe 100644
  
  
  {-| Try a bunch of different path parsers.
-@@ -321,8 +329,8 @@ segments.
+@@ -321,8 +338,8 @@ segments.
  -}
  query : Query.Parser query -> Parser (query -> a) a
  query (Q.Parser queryParser) =
@@ -108,7 +117,7 @@ index e3f1ec3..cfa35fe 100644
      ]
  
  
-@@ -350,8 +358,8 @@ be handy for handling links to DOM elements within a page. Pages like this one!
+@@ -350,8 +367,8 @@ be handy for handling links to DOM elements within a page. Pages like this one!
  -}
  fragment : (Maybe String -> fragment) -> Parser (fragment -> a) a
  fragment toFrag =
@@ -119,7 +128,7 @@ index e3f1ec3..cfa35fe 100644
      ]
  
  
-@@ -402,7 +410,7 @@ the initial URL and any changes.
+@@ -402,7 +419,7 @@ the initial URL and any changes.
  parse : Parser (a -> a) a -> Url -> Maybe a
  parse (Parser parser) url =
    getFirstMatch <| parser <|
