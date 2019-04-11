@@ -3,6 +3,7 @@ module Main exposing (main)
 import Browser
 import Browser.Navigation as Navigation
 import Buildbarn.Browser.Frontend.Page as Page
+import Buildbarn.Browser.Frontend.Page.Action as PageAction
 import Buildbarn.Browser.Frontend.Page.Command as PageCommand
 import Buildbarn.Browser.Frontend.Page.Directory as PageDirectory
 import Buildbarn.Browser.Frontend.Page.NotFound as PageNotFound
@@ -19,7 +20,8 @@ import Url exposing (Url)
 
 
 type CurrentPage
-    = Command PageCommand.Model
+    = Action PageAction.Model
+    | Command PageCommand.Model
     | Directory PageDirectory.Model
     | NotFound
     | Tree PageTree.Model
@@ -50,8 +52,9 @@ changeRouteTo maybeRoute model =
         Nothing ->
             ( { model | currentPage = NotFound }, Cmd.none )
 
-        Just (Route.Action _) ->
-            ( { model | currentPage = NotFound }, Cmd.none )
+        Just (Route.Action digest) ->
+            PageAction.init digest
+                |> updateWith Action GotActionMsg model
 
         Just (Route.Command digest) ->
             PageCommand.init digest
@@ -79,6 +82,7 @@ changeRouteTo maybeRoute model =
 type Msg
     = ChangedUrl Url
     | ClickedLink Browser.UrlRequest
+    | GotActionMsg PageAction.Msg
     | GotCommandMsg PageCommand.Msg
     | GotDirectoryMsg PageDirectory.Msg
     | GotTreeMsg PageTree.Msg
@@ -109,6 +113,10 @@ update msg model =
                     ( model
                     , Navigation.load href
                     )
+
+        ( GotActionMsg subMsg, Action subModel ) ->
+            PageAction.update subMsg subModel
+                |> updateWith Action GotActionMsg model
 
         ( GotCommandMsg subMsg, Command subModel ) ->
             PageCommand.update subMsg subModel
@@ -141,6 +149,9 @@ updateWith toModel toMsg model ( subModel, subCmd ) =
 view : Model -> Browser.Document Msg
 view model =
     case model.currentPage of
+        Action subModel ->
+            Page.viewPage <| PageAction.view subModel
+
         Command subModel ->
             Page.viewPage <| PageCommand.view subModel
 

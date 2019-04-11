@@ -11,6 +11,7 @@ elm_library(
     srcs = [
         "Api.elm",
         "Page.elm",
+        "Page/Action.elm",
         "Page/Command.elm",
         "Page/Directory.elm",
         "Page/NotFound.elm",

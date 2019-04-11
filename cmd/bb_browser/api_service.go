@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	remoteexecution "github.com/bazelbuild/remote-apis/build/bazel/remote/execution/v2"
+	"github.com/buildbarn/bb-storage/pkg/ac"
 	"github.com/buildbarn/bb-storage/pkg/cas"
 	"github.com/buildbarn/bb-storage/pkg/util"
 	"github.com/golang/protobuf/jsonpb"
@@ -18,8 +19,16 @@ type APIService struct {
 	marshaler jsonpb.Marshaler
 }
 
-func NewAPIService(contentAddressableStorage cas.ContentAddressableStorage, router *mux.Router) *APIService {
+func NewAPIService(contentAddressableStorage cas.ContentAddressableStorage, actionCache ac.ActionCache, router *mux.Router) *APIService {
 	s := &APIService{}
+	router.HandleFunc("/api/get_action", s.handleGetObject(
+		func(ctx context.Context, digest *util.Digest) (proto.Message, error) {
+			return contentAddressableStorage.GetAction(ctx, digest)
+		}))
+	router.HandleFunc("/api/get_action_result", s.handleGetObject(
+		func(ctx context.Context, digest *util.Digest) (proto.Message, error) {
+			return actionCache.GetActionResult(ctx, digest)
+		}))
 	router.HandleFunc("/api/get_command", s.handleGetObject(
 		func(ctx context.Context, digest *util.Digest) (proto.Message, error) {
 			return contentAddressableStorage.GetCommand(ctx, digest)
