@@ -1,10 +1,9 @@
 module Buildbarn.Browser.Frontend.Page exposing
     ( Page
+    , viewApiCallResult
     , viewDirectory
     , viewDirectoryListing
     , viewDirectoryListingEntry
-    , viewError
-    , viewLoading
     , viewPage
     , viewShell
     )
@@ -17,6 +16,7 @@ import Bootstrap.Table as Table
 import Bootstrap.Utilities.Spacing exposing (mb5, my4)
 import Browser
 import Build.Bazel.Remote.Execution.V2.Remote_execution as REv2
+import Buildbarn.Browser.Frontend.Api as Api
 import Buildbarn.Browser.Frontend.Route as Route
 import Buildbarn.Browser.Frontend.Shell as Shell
 import Html exposing (a, h1, p, text)
@@ -159,37 +159,39 @@ viewDirectoryListing entries =
         )
 
 
-{-| Displays a HTTP error message in a friendly way.
+{-| Displays a message that the page is still loading, or that a HTTP
+error occurred loading it.
 -}
-viewError : Http.Error -> List (Html.Html msg)
-viewError error =
-    [ p []
-        [ text
-            (case error of
-                Http.BadUrl message ->
-                    "BadURL " ++ message
+viewApiCallResult : Maybe (Api.CallResult a) -> (a -> List (Html.Html msg)) -> List (Html.Html msg)
+viewApiCallResult result display =
+    case result of
+        Nothing ->
+            [ p [] [ text "Loading..." ] ]
 
-                Http.Timeout ->
-                    "Timeout"
+        Just (Err error) ->
+            [ p []
+                [ text
+                    (case error of
+                        Http.BadUrl message ->
+                            "BadURL " ++ message
 
-                Http.NetworkError ->
-                    "Network error"
+                        Http.Timeout ->
+                            "Timeout"
 
-                Http.BadStatus code ->
-                    "BadCode " ++ String.fromInt code
+                        Http.NetworkError ->
+                            "Network error"
 
-                Http.BadBody message ->
-                    "BadBody " ++ message
-            )
-        ]
-    ]
+                        Http.BadStatus code ->
+                            "BadCode " ++ String.fromInt code
 
+                        Http.BadBody message ->
+                            "BadBody " ++ message
+                    )
+                ]
+            ]
 
-{-| Displays a message that the page is still loading.
--}
-viewLoading : List (Html.Html msg)
-viewLoading =
-    [ p [] [ text "Loading..." ] ]
+        Just (Ok message) ->
+            display message
 
 
 viewShell : String -> String

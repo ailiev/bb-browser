@@ -1,4 +1,4 @@
-module Buildbarn.Browser.Frontend.Api exposing (getMessage)
+module Buildbarn.Browser.Frontend.Api exposing (CallResult, getMessage)
 
 import Buildbarn.Browser.Frontend.Route as Route
 import Http
@@ -6,7 +6,11 @@ import Json.Decode as JD
 import Url.Builder
 
 
-getMessage : String -> (Result Http.Error a -> msg) -> JD.Decoder a -> Route.Digest -> Cmd msg
+type alias CallResult message =
+    Result Http.Error message
+
+
+getMessage : String -> (CallResult a -> msg) -> JD.Decoder a -> Route.Digest -> Cmd msg
 getMessage endpoint toMsg decoder digest =
     Http.get
         { url =

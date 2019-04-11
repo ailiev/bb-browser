@@ -14,15 +14,17 @@ import Http
 -- MODEL
 
 
-type Model
-    = Failure Http.Error
-    | Loading
-    | Success REv2.Command
+type alias CommandResult =
+    Api.CallResult REv2.Command
+
+
+type alias Model =
+    Maybe CommandResult
 
 
 init : Route.Digest -> ( Model, Cmd Msg )
 init digest =
-    ( Loading
+    ( Nothing
     , Api.getMessage "command" GotCommand REv2.commandDecoder digest
     )
 
@@ -32,19 +34,12 @@ init digest =
 
 
 type Msg
-    = GotCommand (Result Http.Error REv2.Command)
+    = GotCommand CommandResult
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
-    case msg of
-        GotCommand result ->
-            case result of
-                Ok command ->
-                    ( Success command, Cmd.none )
-
-                Err error ->
-                    ( Failure error, Cmd.none )
+update (GotCommand commandResult) model =
+    ( Just commandResult, Cmd.none )
 
 
 
@@ -56,14 +51,8 @@ view model =
     { title = "Command"
     , bannerColor = "secondary"
     , body =
-        case model of
-            Failure error ->
-                Page.viewError error
-
-            Loading ->
-                Page.viewLoading
-
-            Success command ->
+        Page.viewApiCallResult model <|
+            \command ->
                 [ table [ class "table", style "table-layout" "fixed" ] <|
                     [ tr []
                         [ th [ style "width" "25%" ] [ text "Arguments:" ]

@@ -5,22 +5,35 @@ import Buildbarn.Browser.Frontend.Api as Api
 import Buildbarn.Browser.Frontend.Page as Page
 import Buildbarn.Browser.Frontend.Route as Route
 import Http
+import Json.Decode as JD
 
 
 
 -- MODEL
 
 
-type Model
-    = Failure Http.Error
-    | Loading
-    | Success Route.Digest REv2.Directory
+type alias DirectoryResult =
+    Api.CallResult
+        { digest : Route.Digest
+        , directory : REv2.Directory
+        }
+
+
+type alias Model =
+    Maybe DirectoryResult
 
 
 init : Route.Digest -> ( Model, Cmd Msg )
 init digest =
-    ( Loading
-    , Api.getMessage "directory" (GotDirectory digest) REv2.directoryDecoder digest
+    ( Nothing
+    , Api.getMessage
+        "directory"
+        GotDirectory
+        (JD.map
+            (\directory -> { digest = digest, directory = directory })
+            REv2.directoryDecoder
+        )
+        digest
     )
 
 
@@ -29,19 +42,12 @@ init digest =
 
 
 type Msg
-    = GotDirectory Route.Digest (Result Http.Error REv2.Directory)
+    = GotDirectory DirectoryResult
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
-    case msg of
-        GotDirectory digest result ->
-            case result of
-                Ok directory ->
-                    ( Success digest directory, Cmd.none )
-
-                Err error ->
-                    ( Failure error, Cmd.none )
+update (GotDirectory directoryResult) model =
+    ( Just directoryResult, Cmd.none )
 
 
 
@@ -53,13 +59,6 @@ view model =
     { title = "Input directory"
     , bannerColor = "secondary"
     , body =
-        case model of
-            Failure error ->
-                Page.viewError error
-
-            Loading ->
-                Page.viewLoading
-
-            Success digest directory ->
-                Page.viewDirectory digest directory
+        Page.viewApiCallResult model <|
+            \message -> Page.viewDirectory message.digest message.directory
     }

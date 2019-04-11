@@ -6,22 +6,35 @@ import Buildbarn.Browser.Frontend.Page as Page
 import Buildbarn.Browser.Frontend.Route as Route
 import Html exposing (p, text)
 import Http
+import Json.Decode as JD
 
 
 
 -- MODEL
 
 
-type Model
-    = Failure Http.Error
-    | Loading
-    | Success REv2.Tree (List String)
+type alias TreeResult =
+    Api.CallResult
+        { tree : REv2.Tree
+        , path : List String
+        }
 
 
-init : Route.Digest -> (List String) -> ( Model, Cmd Msg )
+type alias Model =
+    Maybe TreeResult
+
+
+init : Route.Digest -> List String -> ( Model, Cmd Msg )
 init digest path =
-    ( Loading
-    , Api.getMessage "tree" (GotTree path) REv2.treeDecoder digest
+    ( Nothing
+    , Api.getMessage
+        "tree"
+        GotTree
+        (JD.map
+            (\tree -> { tree = tree, path = path })
+            REv2.treeDecoder
+        )
+        digest
     )
 
 
@@ -30,19 +43,12 @@ init digest path =
 
 
 type Msg
-    = GotTree (List String) (Result Http.Error REv2.Tree)
+    = GotTree TreeResult
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
-    case msg of
-        GotTree path result ->
-            case result of
-                Ok tree ->
-                    ( Success tree path, Cmd.none )
-
-                Err error ->
-                    ( Failure error, Cmd.none )
+update (GotTree treeResult) model =
+    ( Just treeResult, Cmd.none )
 
 
 
@@ -54,13 +60,7 @@ view model =
     { title = "Output directory"
     , bannerColor = "secondary"
     , body =
-        case model of
-            Failure error ->
-                Page.viewError error
-
-            Loading ->
-                Page.viewLoading
-
-            Success _ path ->
-                List.map (\filename -> p [] [ text filename ]) path
+        Page.viewApiCallResult model <|
+            \message ->
+                List.map (\filename -> p [] [ text filename ]) message.path
     }
