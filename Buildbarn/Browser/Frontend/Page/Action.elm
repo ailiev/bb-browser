@@ -204,5 +204,11 @@ view model =
                     , sup [] [ a [ href "#" ] [ text "*" ] ]
                     ]
                ]
+            ++ (Page.viewApiCallResult model.action <|
+                    \action ->
+                        Page.viewApiCallResult action.inputRoot <|
+                            -- TODO: Use the right digest.
+                            Page.viewDirectory { instance = "", hash = "", sizeBytes = 0 }
+               )
             ++ [ h2 [] [ text "Output files " ] ]
     }
