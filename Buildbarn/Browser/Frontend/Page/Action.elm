@@ -92,16 +92,16 @@ update msg model =
             )
 
 
-mapFieldAction updater model =
-    { model | action = updater model.action }
+mapFieldAction updater record =
+    { record | action = updater record.action }
 
 
-mapFieldActionResult updater model =
-    { model | actionResult = updater model.action }
+mapFieldActionResult updater record =
+    { record | actionResult = updater record.action }
 
 
-mapFieldCommand updater actionModel =
-    { actionModel | command = updater actionModel.command }
+mapFieldCommand updater record =
+    { record | command = updater record.command }
 
 
 
