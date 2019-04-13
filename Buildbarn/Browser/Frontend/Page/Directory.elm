@@ -3,7 +3,6 @@ module Buildbarn.Browser.Frontend.Page.Directory exposing (Model, Msg, init, upd
 import Build.Bazel.Remote.Execution.V2.Remote_execution as REv2
 import Buildbarn.Browser.Frontend.Api as Api
 import Buildbarn.Browser.Frontend.Page as Page
-import Buildbarn.Browser.Frontend.Route as Route
 import Http
 import Json.Decode as JD
 
@@ -14,7 +13,7 @@ import Json.Decode as JD
 
 type alias DirectoryResult =
     Api.CallResult
-        { digest : Route.Digest
+        { digest : Api.Digest
         , directory : REv2.Directory
         }
 
@@ -23,7 +22,7 @@ type alias Model =
     Maybe DirectoryResult
 
 
-init : Route.Digest -> ( Model, Cmd Msg )
+init : Api.Digest -> ( Model, Cmd Msg )
 init digest =
     ( Nothing
     , Api.getMessage

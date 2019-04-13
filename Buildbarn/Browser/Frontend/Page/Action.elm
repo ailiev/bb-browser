@@ -3,10 +3,11 @@ module Buildbarn.Browser.Frontend.Page.Action exposing (Model, Msg, init, update
 import Build.Bazel.Remote.Execution.V2.Remote_execution as REv2
 import Buildbarn.Browser.Frontend.Api as Api
 import Buildbarn.Browser.Frontend.Page as Page
-import Buildbarn.Browser.Frontend.Route as Route
-import Html exposing (h2, p, table, td, text, th, tr)
-import Html.Attributes exposing (class, style)
+import Google.Protobuf.Duration as Duration
+import Html exposing (a, h2, p, sup, table, td, text, th, tr)
+import Html.Attributes exposing (class, href, style)
 import Http
+import Json.Decode as JD
 
 
 
@@ -14,16 +15,26 @@ import Http
 
 
 type alias Model =
-    { action : Maybe (Api.CallResult REv2.Action)
+    { action : Maybe (Api.CallResult ActionModel)
     , actionResult : Maybe (Api.CallResult REv2.ActionResult)
     }
 
 
-init : Route.Digest -> ( Model, Cmd Msg )
+type alias ActionModel =
+    { data : REv2.Action
+    , command : Maybe (Api.CallResult REv2.Command)
+    }
+
+
+init : Api.Digest -> ( Model, Cmd Msg )
 init digest =
     ( { action = Nothing, actionResult = Nothing }
     , Cmd.batch
-        [ Api.getMessage "action" GotAction REv2.actionDecoder digest
+        [ Api.getMessage
+            "action"
+            (GotAction digest)
+            (JD.map (\action -> { data = action, command = Nothing }) REv2.actionDecoder)
+            digest
         , Api.getMessage "action_result" GotActionResult REv2.actionResultDecoder digest
         ]
     )
@@ -34,18 +45,63 @@ init digest =
 
 
 type Msg
-    = GotAction (Result Http.Error REv2.Action)
-    | GotActionResult (Result Http.Error REv2.ActionResult)
+    = GotAction Api.Digest (Api.CallResult ActionModel)
+    | GotActionResult (Api.CallResult REv2.ActionResult)
+    | GotCommand (Api.CallResult REv2.Command)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        GotAction action ->
-            ( { model | action = Just action }, Cmd.none )
+        GotAction actionDigest action ->
+            ( model
+                |> (mapFieldAction <|
+                        \_ -> Just action
+                   )
+            , case action of
+                Ok actionModel ->
+                    case actionModel.data.commandDigest of
+                        Just (REv2.DigestMessage commandDigest) ->
+                            Api.getMessage "command" GotCommand REv2.commandDecoder <|
+                                Api.getDerivedDigest actionDigest commandDigest
+
+                        _ ->
+                            Cmd.none
+
+                _ ->
+                    Cmd.none
+            )
 
         GotActionResult actionResult ->
-            ( { model | actionResult = Just actionResult }, Cmd.none )
+            ( model
+                |> (mapFieldActionResult <|
+                        \_ -> Just actionResult
+                   )
+            , Cmd.none
+            )
+
+        GotCommand command ->
+            ( model
+                |> (mapFieldAction <|
+                        Maybe.map <|
+                            Result.map <|
+                                mapFieldCommand <|
+                                    \_ -> Just command
+                   )
+            , Cmd.none
+            )
+
+
+mapFieldAction updater model =
+    { model | action = updater model.action }
+
+
+mapFieldActionResult updater model =
+    { model | actionResult = updater model.action }
+
+
+mapFieldCommand updater actionModel =
+    { actionModel | command = updater actionModel.command }
 
 
 
@@ -67,7 +123,42 @@ view model =
             _ ->
                 "secondary"
     , body =
-        (Page.viewApiCallResult model.action <| \_ -> [])
+        (Page.viewApiCallResult model.action <|
+            \actionModel ->
+                [ table [ class "table", style "table-layout" "fixed" ] <|
+                    [ tr []
+                        [ th [ style "width" "25%" ] [ text "Timeout:" ]
+                        , td [ style "width" "75%" ] <|
+                            case actionModel.data.timeout of
+                                Just (Duration.DurationMessage timeout) ->
+                                    [ text <| String.fromInt timeout.seconds
+                                    , text " seconds "
+                                    ]
+
+                                _ ->
+                                    [ text "∞" ]
+                        ]
+                    , tr []
+                        [ th [ style "width" "25%" ] [ text "Do not cache:" ]
+                        , td [ style "width" "75%" ]
+                            [ text <|
+                                if actionModel.data.doNotCache then
+                                    "yes"
+
+                                else
+                                    "no"
+                            ]
+                        ]
+                    ]
+                , h2 []
+                    [ text "Command"
+                    , sup [] [ a [ href "#" ] [ text "*" ] ]
+                    ]
+                ]
+                    ++ (Page.viewApiCallResult actionModel.command <|
+                            \command -> [ Page.viewCommandInfo command ]
+                       )
+        )
             ++ [ h2 [] [ text "Result " ] ]
             ++ (Page.viewApiCallResult model.actionResult <|
                     \actionResult ->
@@ -79,4 +170,10 @@ view model =
                             ]
                         ]
                )
+            ++ [ h2 []
+                    [ text "Input files"
+                    , sup [] [ a [ href "#" ] [ text "*" ] ]
+                    ]
+               ]
+            ++ [ h2 [] [ text "Output files " ] ]
     }

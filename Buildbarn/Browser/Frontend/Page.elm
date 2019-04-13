@@ -1,11 +1,11 @@
 module Buildbarn.Browser.Frontend.Page exposing
     ( Page
     , viewApiCallResult
+    , viewCommandInfo
     , viewDirectory
     , viewDirectoryListing
     , viewDirectoryListingEntry
     , viewPage
-    , viewShell
     )
 
 import Bootstrap.Button as Button
@@ -17,9 +17,8 @@ import Bootstrap.Utilities.Spacing exposing (mb5, my4)
 import Browser
 import Build.Bazel.Remote.Execution.V2.Remote_execution as REv2
 import Buildbarn.Browser.Frontend.Api as Api
-import Buildbarn.Browser.Frontend.Route as Route
 import Buildbarn.Browser.Frontend.Shell as Shell
-import Html exposing (a, h1, p, text)
+import Html exposing (a, b, br, div, h1, p, table, td, text, th, tr)
 import Html.Attributes exposing (class, href, style)
 import Http
 import Url.Builder
@@ -45,7 +44,76 @@ viewPage contents =
         ]
 
 
-viewDirectory : Route.Digest -> REv2.Directory -> List (Html.Html msg)
+viewCommandInfo : REv2.Command -> Html.Html msg
+viewCommandInfo command =
+    table [ class "table", style "table-layout" "fixed" ] <|
+        [ tr []
+            [ th [ style "width" "25%" ] [ text "Arguments:" ]
+            , td [ class "text-monospace", style "width" "75%", style "overflow-x" "scroll" ] <|
+                case command.arguments |> List.map viewShell of
+                    first :: rest ->
+                        [ div [ style "padding-left" "2em", style "text-indent" "-2em" ] <|
+                            b [] [ text first ]
+                                :: List.concatMap
+                                    (\argument ->
+                                        [ text " "
+                                        , text argument
+                                        ]
+                                    )
+                                    rest
+                        ]
+
+                    [] ->
+                        []
+            ]
+        , tr []
+            [ th [ style "width" "25%" ] [ text "Environment variables:" ]
+            , command.environmentVariables
+                |> List.map
+                    (\(REv2.Command_EnvironmentVariableMessage env) ->
+                        [ b [] [ text env.name ]
+                        , text "="
+                        , text <| viewShell env.value
+                        ]
+                    )
+                |> List.intersperse [ br [] [] ]
+                |> List.concat
+                |> td [ class "text-monospace", style "width" "75%", style "overflow-x" "scroll" ]
+            ]
+        , tr []
+            [ th [ style "width" "25%" ] [ text "Working directory:" ]
+            , td [ class "text-monospace", style "width" "75%" ]
+                [ text <|
+                    if String.isEmpty command.workingDirectory then
+                        "."
+
+                    else
+                        command.workingDirectory
+                ]
+            ]
+        ]
+            ++ (case command.platform of
+                    Just (REv2.PlatformMessage platform) ->
+                        [ th [ style "width" "25%" ] [ text "Platform properties:" ]
+                        , platform.properties
+                            |> List.map
+                                (\(REv2.Platform_PropertyMessage property) ->
+                                    [ b [] [ text property.name ]
+                                    , text " = "
+                                    , text property.value
+                                    ]
+                                )
+                            |> List.intersperse [ br [] [] ]
+                            |> List.concat
+                            |> td [ style "width" "75%" ]
+                        ]
+
+                    Nothing ->
+                        []
+               )
+
+
+viewDirectory : Api.Digest -> REv2.Directory -> List (Html.Html msg)
 viewDirectory digest directory =
     [ viewDirectoryListing <|
         List.map

@@ -1,16 +1,36 @@
-module Buildbarn.Browser.Frontend.Api exposing (CallResult, getMessage)
+module Buildbarn.Browser.Frontend.Api exposing
+    ( CallResult
+    , Digest
+    , getDerivedDigest
+    , getMessage
+    )
 
-import Buildbarn.Browser.Frontend.Route as Route
+import Build.Bazel.Remote.Execution.V2.Remote_execution as REv2
 import Http
 import Json.Decode as JD
 import Url.Builder
+
+
+type alias Digest =
+    { instance : String
+    , hash : String
+    , sizeBytes : Int
+    }
 
 
 type alias CallResult message =
     Result Http.Error message
 
 
-getMessage : String -> (CallResult a -> msg) -> JD.Decoder a -> Route.Digest -> Cmd msg
+getDerivedDigest : Digest -> REv2.Digest -> Digest
+getDerivedDigest parent child =
+    { instance = parent.instance
+    , hash = child.hash
+    , sizeBytes = child.sizeBytes
+    }
+
+
+getMessage : String -> (CallResult a -> msg) -> JD.Decoder a -> Digest -> Cmd msg
 getMessage endpoint toMsg decoder digest =
     Http.get
         { url =

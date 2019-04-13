@@ -3,7 +3,6 @@ module Buildbarn.Browser.Frontend.Page.Tree exposing (Model, Msg, init, update, 
 import Build.Bazel.Remote.Execution.V2.Remote_execution as REv2
 import Buildbarn.Browser.Frontend.Api as Api
 import Buildbarn.Browser.Frontend.Page as Page
-import Buildbarn.Browser.Frontend.Route as Route
 import Html exposing (p, text)
 import Http
 import Json.Decode as JD
@@ -24,7 +23,7 @@ type alias Model =
     Maybe TreeResult
 
 
-init : Route.Digest -> List String -> ( Model, Cmd Msg )
+init : Api.Digest -> List String -> ( Model, Cmd Msg )
 init digest path =
     ( Nothing
     , Api.getMessage
