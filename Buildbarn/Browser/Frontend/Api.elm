@@ -1,7 +1,7 @@
 module Buildbarn.Browser.Frontend.Api exposing
     ( CallResult
     , Digest
-    , getDerivedDigest
+    , getChildMessage
     , getMessage
     )
 
@@ -22,14 +22,6 @@ type alias CallResult message =
     Result Http.Error message
 
 
-getDerivedDigest : Digest -> REv2.Digest -> Digest
-getDerivedDigest parent child =
-    { instance = parent.instance
-    , hash = child.hash
-    , sizeBytes = child.sizeBytes
-    }
-
-
 getMessage : String -> (CallResult a -> msg) -> JD.Decoder a -> Digest -> Cmd msg
 getMessage endpoint toMsg decoder digest =
     Http.get
@@ -42,3 +34,24 @@ getMessage endpoint toMsg decoder digest =
                 ]
         , expect = Http.expectJson toMsg decoder
         }
+
+
+getChildMessage : String -> (CallResult a -> msg) -> JD.Decoder a -> (b -> Maybe REv2.DigestMessage) -> Digest -> CallResult b -> Cmd msg
+getChildMessage endpoint toMsg decoder getChildDigest parentDigest parentResult =
+    case parentResult of
+        Ok parent ->
+            case getChildDigest parent of
+                Just (REv2.DigestMessage childDigest) ->
+                    getMessage endpoint
+                        toMsg
+                        decoder
+                        { instance = parentDigest.instance
+                        , hash = childDigest.hash
+                        , sizeBytes = childDigest.sizeBytes
+                        }
+
+                _ ->
+                    Cmd.none
+
+        _ ->
+            Cmd.none

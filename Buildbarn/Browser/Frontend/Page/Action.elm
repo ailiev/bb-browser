@@ -23,6 +23,7 @@ type alias Model =
 type alias ActionModel =
     { data : REv2.Action
     , command : Maybe (Api.CallResult REv2.Command)
+    , inputRoot : Maybe (Api.CallResult REv2.Directory)
     }
 
 
@@ -33,7 +34,15 @@ init digest =
         [ Api.getMessage
             "action"
             (GotAction digest)
-            (JD.map (\action -> { data = action, command = Nothing }) REv2.actionDecoder)
+            (JD.map
+                (\action ->
+                    { data = action
+                    , command = Nothing
+                    , inputRoot = Nothing
+                    }
+                )
+                REv2.actionDecoder
+            )
             digest
         , Api.getMessage "action_result" GotActionResult REv2.actionResultDecoder digest
         ]
@@ -48,6 +57,7 @@ type Msg
     = GotAction Api.Digest (Api.CallResult ActionModel)
     | GotActionResult (Api.CallResult REv2.ActionResult)
     | GotCommand (Api.CallResult REv2.Command)
+    | GotInputRoot (Api.CallResult REv2.Directory)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -58,18 +68,22 @@ update msg model =
                 |> (mapFieldAction <|
                         \_ -> Just action
                    )
-            , case action of
-                Ok actionModel ->
-                    case actionModel.data.commandDigest of
-                        Just (REv2.DigestMessage commandDigest) ->
-                            Api.getMessage "command" GotCommand REv2.commandDecoder <|
-                                Api.getDerivedDigest actionDigest commandDigest
-
-                        _ ->
-                            Cmd.none
-
-                _ ->
-                    Cmd.none
+            , Cmd.batch
+                [ Api.getChildMessage
+                    "command"
+                    GotCommand
+                    REv2.commandDecoder
+                    (\actionModel -> actionModel.data.commandDigest)
+                    actionDigest
+                    action
+                , Api.getChildMessage
+                    "directory"
+                    GotInputRoot
+                    REv2.directoryDecoder
+                    (\actionModel -> actionModel.data.inputRootDigest)
+                    actionDigest
+                    action
+                ]
             )
 
         GotActionResult actionResult ->
@@ -91,6 +105,17 @@ update msg model =
             , Cmd.none
             )
 
+        GotInputRoot directory ->
+            ( model
+                |> (mapFieldAction <|
+                        Maybe.map <|
+                            Result.map <|
+                                mapFieldInputRoot <|
+                                    \_ -> Just directory
+                   )
+            , Cmd.none
+            )
+
 
 mapFieldAction updater record =
     { record | action = updater record.action }
@@ -102,6 +127,10 @@ mapFieldActionResult updater record =
 
 mapFieldCommand updater record =
     { record | command = updater record.command }
+
+
+mapFieldInputRoot updater record =
+    { record | inputRoot = updater record.inputRoot }
 
 
 
