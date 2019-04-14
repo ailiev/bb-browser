@@ -46,9 +46,9 @@ http_archive(
 
 http_archive(
     name = "com_github_edschouten_rules_elm",
-    sha256 = "27262d1b353f80037af2ac8b3fc48ee94b2d614b8d2a8863d2481f399efdc8bf",
-    strip_prefix = "rules_elm-4660395f27fa41e8c159600f0b7ab35981d6e95e",
-    urls = ["https://github.com/EdSchouten/rules_elm/archive/4660395f27fa41e8c159600f0b7ab35981d6e95e.tar.gz"],
+    sha256 = "9d7c96d840db321af17e323194e48526e916b08deb7c69637f3a25278cc4c40e",
+    strip_prefix = "rules_elm-e5ebb5bc4c91c684a04447c5042eae6db90a01cd",
+    urls = ["https://github.com/EdSchouten/rules_elm/archive/e5ebb5bc4c91c684a04447c5042eae6db90a01cd.tar.gz"],
 )
 
 http_archive(
