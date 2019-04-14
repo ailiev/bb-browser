@@ -1,5 +1,6 @@
 module Buildbarn.Browser.Frontend.Page.Action exposing (Model, Msg, init, update, view)
 
+import Bootstrap.Badge as Badge
 import Bootstrap.Utilities.Spacing exposing (my4)
 import Build.Bazel.Remote.Execution.V2.Remote_execution as REv2
 import Buildbarn.Browser.Frontend.Api as Api
@@ -193,7 +194,15 @@ view model =
                         [ table [ class "table", style "table-layout" "fixed" ] <|
                             [ tr []
                                 [ th [ style "width" "25%" ] [ text "Exit code:" ]
-                                , td [ style "width" "75%" ] [ text <| String.fromInt actionResult.exitCode ]
+                                , td [ style "width" "75%" ]
+                                    [ text <| String.fromInt actionResult.exitCode
+                                    , text " "
+                                    , if actionResult.exitCode == 0 then
+                                        Badge.badgeSuccess [] [ text "Success " ]
+
+                                      else
+                                        Badge.badgeDanger [] [ text "Failure " ]
+                                    ]
                                 ]
                             ]
                         ]
