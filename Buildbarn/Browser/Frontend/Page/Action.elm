@@ -1,5 +1,6 @@
 module Buildbarn.Browser.Frontend.Page.Action exposing (Model, Msg, init, update, view)
 
+import Bootstrap.Utilities.Spacing exposing (my4)
 import Build.Bazel.Remote.Execution.V2.Remote_execution as REv2
 import Buildbarn.Browser.Frontend.Api as Api
 import Buildbarn.Browser.Frontend.Page as Page
@@ -177,7 +178,7 @@ view model =
                             ]
                         ]
                     ]
-                , h2 []
+                , h2 [ my4 ]
                     [ text "Command"
                     , sup [] [ a [ href "#" ] [ text "*" ] ]
                     ]
@@ -186,7 +187,7 @@ view model =
                             \command -> [ Page.viewCommandInfo command ]
                        )
         )
-            ++ [ h2 [] [ text "Result " ] ]
+            ++ [ h2 [ my4 ] [ text "Result " ] ]
             ++ (Page.viewApiCallResult model.actionResult <|
                     \actionResult ->
                         [ table [ class "table", style "table-layout" "fixed" ] <|
@@ -197,7 +198,7 @@ view model =
                             ]
                         ]
                )
-            ++ [ h2 []
+            ++ [ h2 [ my4 ]
                     [ text "Input files"
                     , sup [] [ a [ href "#" ] [ text "*" ] ]
                     ]
@@ -208,5 +209,5 @@ view model =
                             -- TODO: Use the right digest.
                             Page.viewDirectory { instance = "", hash = "", sizeBytes = 0 }
                )
-            ++ [ h2 [] [ text "Output files " ] ]
+            ++ [ h2 [ my4 ] [ text "Output files " ] ]
     }
