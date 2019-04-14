@@ -31,19 +31,7 @@ init : Api.Digest -> ( Model, Cmd Msg )
 init digest =
     ( { action = Nothing, actionResult = Nothing }
     , Cmd.batch
-        [ Api.getMessage
-            "action"
-            (GotAction digest)
-            (JD.map
-                (\action ->
-                    { data = action
-                    , command = Nothing
-                    , inputRoot = Nothing
-                    }
-                )
-                REv2.actionDecoder
-            )
-            digest
+        [ Api.getMessage "action" (GotAction digest) REv2.actionDecoder digest
         , Api.getMessage "action_result" GotActionResult REv2.actionResultDecoder digest
         ]
     )
@@ -54,7 +42,7 @@ init digest =
 
 
 type Msg
-    = GotAction Api.Digest (Api.CallResult ActionModel)
+    = GotAction Api.Digest (Api.CallResult REv2.Action)
     | GotActionResult (Api.CallResult REv2.ActionResult)
     | GotCommand (Api.CallResult REv2.Command)
     | GotInputRoot (Api.CallResult REv2.Directory)
@@ -66,21 +54,31 @@ update msg model =
         GotAction actionDigest action ->
             ( model
                 |> (mapFieldAction <|
-                        \_ -> Just action
+                        \_ ->
+                            Just
+                                (Result.map
+                                    (\data ->
+                                        { data = data
+                                        , command = Nothing
+                                        , inputRoot = Nothing
+                                        }
+                                    )
+                                    action
+                                )
                    )
             , Cmd.batch
                 [ Api.getChildMessage
                     "command"
                     GotCommand
                     REv2.commandDecoder
-                    (\actionModel -> actionModel.data.commandDigest)
+                    (\actionMessage -> actionMessage.commandDigest)
                     actionDigest
                     action
                 , Api.getChildMessage
                     "directory"
                     GotInputRoot
                     REv2.directoryDecoder
-                    (\actionModel -> actionModel.data.inputRootDigest)
+                    (\actionMessage -> actionMessage.inputRootDigest)
                     actionDigest
                     action
                 ]
