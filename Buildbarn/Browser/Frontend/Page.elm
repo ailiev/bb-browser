@@ -141,17 +141,6 @@ viewDirectory digest directory =
             )
             directory.directories
             ++ List.map
-                (\(REv2.SymlinkNodeMessage entry) ->
-                    viewDirectoryListingEntry
-                        "lrwxrwxrwx"
-                        Nothing
-                        [ text entry.name
-                        , text " → "
-                        , text entry.target
-                        ]
-                )
-                directory.symlinks
-            ++ List.map
                 (\(REv2.FileNodeMessage entry) ->
                     viewDirectoryListingEntry
                         (if entry.isExecutable then
@@ -181,6 +170,17 @@ viewDirectory digest directory =
                         ]
                 )
                 directory.files
+            ++ List.map
+                (\(REv2.SymlinkNodeMessage entry) ->
+                    viewDirectoryListingEntry
+                        "lrwxrwxrwx"
+                        Nothing
+                        [ text entry.name
+                        , text " → "
+                        , text entry.target
+                        ]
+                )
+                directory.symlinks
     , Button.linkButton
         [ Button.primary
         , Button.attrs

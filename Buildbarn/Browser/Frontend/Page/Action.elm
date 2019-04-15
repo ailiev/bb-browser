@@ -218,5 +218,71 @@ view model =
                             -- TODO: Use the right digest.
                             Page.viewDirectory { instance = "", hash = "", sizeBytes = 0 }
                )
-            ++ [ h2 [ my4 ] [ text "Output files " ] ]
+            ++ (case
+                    ( model.actionResult
+                        |> Maybe.andThen Result.toMaybe
+                    , model.action
+                        |> Maybe.andThen Result.toMaybe
+                        |> Maybe.andThen (\actionModel -> actionModel.command)
+                        |> Maybe.andThen Result.toMaybe
+                    )
+                of
+                    ( Nothing, Nothing ) ->
+                        []
+
+                    ( maybeActionResult, maybeCommand ) ->
+                        [ h2 [ my4 ] [ text "Output files" ]
+                        , Page.viewDirectoryListing <|
+                            (case maybeActionResult of
+                                Just actionResult ->
+                                    List.map
+                                        (\(REv2.OutputDirectoryMessage entry) ->
+                                            Page.viewDirectoryListingEntry
+                                                "drwxrwxrwx"
+                                                entry.treeDigest
+                                                [ text entry.path ]
+                                        )
+                                        actionResult.outputDirectories
+                                        ++ List.map
+                                            (\(REv2.OutputSymlinkMessage entry) ->
+                                                Page.viewDirectoryListingEntry
+                                                    "lrwxrwxrwx"
+                                                    Nothing
+                                                    [ text entry.path ]
+                                            )
+                                            actionResult.outputDirectorySymlinks
+                                        ++ List.map
+                                            (\(REv2.OutputFileMessage entry) ->
+                                                Page.viewDirectoryListingEntry
+                                                    (if entry.isExecutable then
+                                                        "‑rwxr‑xr‑x"
+
+                                                     else
+                                                        "‑rw‑r‑‑r‑‑"
+                                                    )
+                                                    entry.digest
+                                                    [ text entry.path ]
+                                            )
+                                            actionResult.outputFiles
+                                        ++ List.map
+                                            (\(REv2.OutputSymlinkMessage entry) ->
+                                                Page.viewDirectoryListingEntry
+                                                    "lrwxrwxrwx"
+                                                    Nothing
+                                                    [ text entry.path ]
+                                            )
+                                            actionResult.outputFileSymlinks
+
+                                Nothing ->
+                                    []
+                            )
+                                ++ (case maybeCommand of
+                                        Just command ->
+                                            []
+
+                                        Nothing ->
+                                            []
+                                   )
+                        ]
+               )
     }
