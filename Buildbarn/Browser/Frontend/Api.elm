@@ -36,19 +36,23 @@ getMessage endpoint toMsg decoder digest =
         }
 
 
-getChildMessage : String -> (CallResult a -> msg) -> JD.Decoder a -> (b -> Maybe REv2.DigestMessage) -> Digest -> CallResult b -> Cmd msg
+getChildMessage : String -> (Digest -> CallResult a -> msg) -> JD.Decoder a -> (b -> Maybe REv2.DigestMessage) -> Digest -> CallResult b -> Cmd msg
 getChildMessage endpoint toMsg decoder getChildDigest parentDigest parentResult =
     case parentResult of
         Ok parent ->
             case getChildDigest parent of
                 Just (REv2.DigestMessage childDigest) ->
+                    let
+                        newDigest =
+                            { instance = parentDigest.instance
+                            , hash = childDigest.hash
+                            , sizeBytes = childDigest.sizeBytes
+                            }
+                    in
                     getMessage endpoint
-                        toMsg
+                        (toMsg newDigest)
                         decoder
-                        { instance = parentDigest.instance
-                        , hash = childDigest.hash
-                        , sizeBytes = childDigest.sizeBytes
-                        }
+                        newDigest
 
                 _ ->
                     Cmd.none

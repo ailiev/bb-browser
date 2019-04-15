@@ -1,4 +1,11 @@
-module Buildbarn.Browser.Frontend.Page.Action exposing (Model, Msg, init, update, view)
+module Buildbarn.Browser.Frontend.Page.Action exposing
+    ( Model
+    , Msg
+    , initCached
+    , initUncached
+    , update
+    , view
+    )
 
 import Bootstrap.Badge as Badge
 import Bootstrap.Utilities.Spacing exposing (my4)
@@ -10,6 +17,7 @@ import Html exposing (a, h2, p, sup, table, td, text, th, tr)
 import Html.Attributes exposing (class, href, style)
 import Http
 import Json.Decode as JD
+import Pkg.Proto.Cas.Cas as Cas
 
 
 
@@ -29,13 +37,20 @@ type alias ActionModel =
     }
 
 
-init : Api.Digest -> ( Model, Cmd Msg )
-init digest =
+initCached : Api.Digest -> ( Model, Cmd Msg )
+initCached digest =
     ( { action = Nothing, actionResult = Nothing }
     , Cmd.batch
         [ Api.getMessage "action" (GotAction digest) REv2.actionDecoder digest
         , Api.getMessage "action_result" GotActionResult REv2.actionResultDecoder digest
         ]
+    )
+
+
+initUncached : Api.Digest -> ( Model, Cmd Msg )
+initUncached digest =
+    ( { action = Nothing, actionResult = Nothing }
+    , Api.getMessage "uncached_action_result" (GotUncachedActionResult digest) Cas.uncachedActionResultDecoder digest
     )
 
 
@@ -46,8 +61,9 @@ init digest =
 type Msg
     = GotAction Api.Digest (Api.CallResult REv2.Action)
     | GotActionResult (Api.CallResult REv2.ActionResult)
-    | GotCommand (Api.CallResult REv2.Command)
-    | GotInputRoot (Api.CallResult REv2.Directory)
+    | GotCommand Api.Digest (Api.CallResult REv2.Command)
+    | GotInputRoot Api.Digest (Api.CallResult REv2.Directory)
+    | GotUncachedActionResult Api.Digest (Api.CallResult Cas.UncachedActionResult)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -94,7 +110,7 @@ update msg model =
             , Cmd.none
             )
 
-        GotCommand command ->
+        GotCommand _ command ->
             ( model
                 |> (mapFieldAction <|
                         Maybe.map <|
@@ -105,7 +121,7 @@ update msg model =
             , Cmd.none
             )
 
-        GotInputRoot directory ->
+        GotInputRoot _ directory ->
             ( model
                 |> (mapFieldAction <|
                         Maybe.map <|
@@ -114,6 +130,17 @@ update msg model =
                                     \_ -> Just directory
                    )
             , Cmd.none
+            )
+
+        GotUncachedActionResult uncachedActionResultDigest uncachedActionResult ->
+            ( model
+            , Api.getChildMessage
+                "action"
+                GotAction
+                REv2.actionDecoder
+                (\uncachedActionResultMessage -> uncachedActionResultMessage.actionDigest)
+                uncachedActionResultDigest
+                uncachedActionResult
             )
 
 

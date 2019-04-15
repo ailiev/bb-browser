@@ -41,6 +41,10 @@ func NewAPIService(contentAddressableStorage cas.ContentAddressableStorage, acti
 		func(ctx context.Context, digest *util.Digest) (proto.Message, error) {
 			return contentAddressableStorage.GetTree(ctx, digest)
 		}))
+	router.HandleFunc("/api/get_uncached_action_result", s.handleGetObject(
+		func(ctx context.Context, digest *util.Digest) (proto.Message, error) {
+			return contentAddressableStorage.GetUncachedActionResult(ctx, digest)
+		}))
 	return s
 }
 

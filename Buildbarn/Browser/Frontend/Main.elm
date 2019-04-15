@@ -53,7 +53,7 @@ changeRouteTo maybeRoute model =
             ( { model | currentPage = NotFound }, Cmd.none )
 
         Just (Route.Action digest) ->
-            PageAction.init digest
+            PageAction.initCached digest
                 |> updateWith Action GotActionMsg model
 
         Just (Route.Command digest) ->
@@ -68,8 +68,9 @@ changeRouteTo maybeRoute model =
             PageTree.init digest path
                 |> updateWith Tree GotTreeMsg model
 
-        Just (Route.UncachedActionResult _) ->
-            ( { model | currentPage = NotFound }, Cmd.none )
+        Just (Route.UncachedActionResult digest) ->
+            PageAction.initUncached digest
+                |> updateWith Action GotActionMsg model
 
         Just Route.Welcome ->
             ( { model | currentPage = Welcome }, Cmd.none )
