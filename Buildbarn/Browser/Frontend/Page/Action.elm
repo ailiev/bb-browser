@@ -133,7 +133,17 @@ update msg model =
             )
 
         GotUncachedActionResult uncachedActionResultDigest uncachedActionResult ->
-            ( model
+            ( case uncachedActionResult of
+                Err e ->
+                    { model | actionResult = Just (Err e) }
+
+                Ok v ->
+                    case v.actionResult of
+                        Nothing ->
+                            model
+
+                        Just (REv2.ActionResultMessage actionResult) ->
+                            { model | actionResult = Just (Ok actionResult) }
             , Api.getChildMessage
                 "action"
                 GotAction
