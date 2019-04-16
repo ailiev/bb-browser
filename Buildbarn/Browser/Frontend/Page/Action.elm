@@ -144,18 +144,22 @@ update msg model =
             )
 
 
+mapFieldAction : (a -> a) -> { b | action : a } -> { b | action : a }
 mapFieldAction updater record =
     { record | action = updater record.action }
 
 
+mapFieldActionResult : (a -> a) -> { b | actionResult : a } -> { b | actionResult : a }
 mapFieldActionResult updater record =
-    { record | actionResult = updater record.action }
+    { record | actionResult = updater record.actionResult }
 
 
+mapFieldCommand : (a -> a) -> { b | command : a } -> { b | command : a }
 mapFieldCommand updater record =
     { record | command = updater record.command }
 
 
+mapFieldInputRoot : (a -> a) -> { b | inputRoot : a } -> { b | inputRoot : a }
 mapFieldInputRoot updater record =
     { record | inputRoot = updater record.inputRoot }
 
