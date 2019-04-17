@@ -201,6 +201,7 @@ elm_repository(
     sha256 = "c4d499949e807e3dc96eaf91335be61e579a1c63f6a400139aba9d46292dc902",
     strip_prefix = "elm-protobuf-7269bbd2da4740cf9dc85f307e1770050b29411b",
     urls = ["https://github.com/tiziano88/elm-protobuf/archive/7269bbd2da4740cf9dc85f307e1770050b29411b.tar.gz"],
+    patches = ["@com_github_buildbarn_bb_browser//:patches/com_github_tiziano88_elm_protobuf/bytes.diff"],
 )
 
 load("@io_bazel_rules_go//go:deps.bzl", "go_register_toolchains", "go_rules_dependencies")

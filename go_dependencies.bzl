@@ -45,6 +45,7 @@ def bb_browser_go_dependencies():
         commit = "b76b05c2ab22f89475cc038b2a2f358ca5b7808f",
         importpath = "github.com/tiziano88/elm-protobuf",
         patches = [
+            "@com_github_buildbarn_bb_browser//:patches/com_github_tiziano88_elm_protobuf/bytes.diff",
             "@com_github_buildbarn_bb_browser//:patches/com_github_tiziano88_elm_protobuf/proto2.diff",
             "@com_github_buildbarn_bb_browser//:patches/com_github_tiziano88_elm_protobuf/recursive-type.diff",
             "@com_github_buildbarn_bb_browser//:patches/com_github_tiziano88_elm_protobuf/silent.diff",
