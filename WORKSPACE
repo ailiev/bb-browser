@@ -46,9 +46,9 @@ http_archive(
 
 http_archive(
     name = "com_github_edschouten_rules_elm",
-    sha256 = "9d7c96d840db321af17e323194e48526e916b08deb7c69637f3a25278cc4c40e",
-    strip_prefix = "rules_elm-e5ebb5bc4c91c684a04447c5042eae6db90a01cd",
-    urls = ["https://github.com/EdSchouten/rules_elm/archive/e5ebb5bc4c91c684a04447c5042eae6db90a01cd.tar.gz"],
+    sha256 = "c34015356f755e5c8dd26c5a82ff9710353f925f435861892fb80a929fa07445",
+    strip_prefix = "rules_elm-0.2",
+    urls = ["https://github.com/EdSchouten/rules_elm/archive/v0.2.tar.gz"],
 )
 
 http_archive(
@@ -198,10 +198,10 @@ elm_repository(
 
 elm_repository(
     name = "elm_package_tiziano88_elm_protobuf",
+    patches = ["@com_github_buildbarn_bb_browser//:patches/com_github_tiziano88_elm_protobuf/bytes.diff"],
     sha256 = "c4d499949e807e3dc96eaf91335be61e579a1c63f6a400139aba9d46292dc902",
     strip_prefix = "elm-protobuf-7269bbd2da4740cf9dc85f307e1770050b29411b",
     urls = ["https://github.com/tiziano88/elm-protobuf/archive/7269bbd2da4740cf9dc85f307e1770050b29411b.tar.gz"],
-    patches = ["@com_github_buildbarn_bb_browser//:patches/com_github_tiziano88_elm_protobuf/bytes.diff"],
 )
 
 load("@io_bazel_rules_go//go:deps.bzl", "go_register_toolchains", "go_rules_dependencies")
