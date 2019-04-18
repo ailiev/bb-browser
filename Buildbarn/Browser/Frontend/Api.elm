@@ -22,7 +22,7 @@ type alias CallResult message =
     Result Http.Error message
 
 
-getMessage : String -> (CallResult a -> msg) -> JD.Decoder a -> Digest -> Cmd msg
+getMessage : String -> (Digest -> CallResult a -> msg) -> JD.Decoder a -> Digest -> Cmd msg
 getMessage endpoint toMsg decoder digest =
     Http.get
         { url =
@@ -32,7 +32,7 @@ getMessage endpoint toMsg decoder digest =
                 , Url.Builder.string "hash" digest.hash
                 , Url.Builder.int "size_bytes" digest.sizeBytes
                 ]
-        , expect = Http.expectJson toMsg decoder
+        , expect = Http.expectJson (toMsg digest) decoder
         }
 
 
@@ -42,17 +42,13 @@ getChildMessage endpoint toMsg decoder getChildDigest parentDigest parentResult 
         Ok parent ->
             case getChildDigest parent of
                 Just (REv2.DigestMessage childDigest) ->
-                    let
-                        newDigest =
-                            { instance = parentDigest.instance
-                            , hash = childDigest.hash
-                            , sizeBytes = childDigest.sizeBytes
-                            }
-                    in
                     getMessage endpoint
-                        (toMsg newDigest)
+                        toMsg
                         decoder
-                        newDigest
+                        { instance = parentDigest.instance
+                        , hash = childDigest.hash
+                        , sizeBytes = childDigest.sizeBytes
+                        }
 
                 _ ->
                     Cmd.none

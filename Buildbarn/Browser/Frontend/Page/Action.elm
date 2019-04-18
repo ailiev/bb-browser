@@ -41,7 +41,7 @@ initCached : Api.Digest -> ( Model, Cmd Msg )
 initCached digest =
     ( { action = Nothing, actionResult = Nothing }
     , Cmd.batch
-        [ Api.getMessage "action" (GotAction digest) REv2.actionDecoder digest
+        [ Api.getMessage "action" GotAction REv2.actionDecoder digest
         , Api.getMessage "action_result" GotActionResult REv2.actionResultDecoder digest
         ]
     )
@@ -50,7 +50,7 @@ initCached digest =
 initUncached : Api.Digest -> ( Model, Cmd Msg )
 initUncached digest =
     ( { action = Nothing, actionResult = Nothing }
-    , Api.getMessage "uncached_action_result" (GotUncachedActionResult digest) Cas.uncachedActionResultDecoder digest
+    , Api.getMessage "uncached_action_result" GotUncachedActionResult Cas.uncachedActionResultDecoder digest
     )
 
 
@@ -60,7 +60,7 @@ initUncached digest =
 
 type Msg
     = GotAction Api.Digest (Api.CallResult REv2.Action)
-    | GotActionResult (Api.CallResult REv2.ActionResult)
+    | GotActionResult Api.Digest (Api.CallResult REv2.ActionResult)
     | GotCommand Api.Digest (Api.CallResult REv2.Command)
     | GotInputRoot Api.Digest (Api.CallResult REv2.Directory)
     | GotUncachedActionResult Api.Digest (Api.CallResult Cas.UncachedActionResult)
@@ -102,7 +102,7 @@ update msg model =
                 ]
             )
 
-        GotActionResult actionResult ->
+        GotActionResult _ actionResult ->
             ( model
                 |> (mapFieldActionResult <|
                         \_ -> Just actionResult

@@ -12,27 +12,19 @@ import Json.Decode as JD
 -- MODEL
 
 
-type alias TreeResult =
-    Api.CallResult
-        { tree : REv2.Tree
-        , path : List String
-        }
-
-
 type alias Model =
-    Maybe TreeResult
+    { tree : Maybe (Api.CallResult REv2.Tree)
+    , path : List String
+    }
 
 
 init : Api.Digest -> List String -> ( Model, Cmd Msg )
 init digest path =
-    ( Nothing
+    ( { tree = Nothing, path = path }
     , Api.getMessage
         "tree"
         GotTree
-        (JD.map
-            (\tree -> { tree = tree, path = path })
-            REv2.treeDecoder
-        )
+        REv2.treeDecoder
         digest
     )
 
@@ -42,12 +34,12 @@ init digest path =
 
 
 type Msg
-    = GotTree TreeResult
+    = GotTree Api.Digest (Api.CallResult REv2.Tree)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update (GotTree treeResult) model =
-    ( Just treeResult, Cmd.none )
+update (GotTree _ treeResult) model =
+    ( { model | tree = Just treeResult }, Cmd.none )
 
 
 
@@ -59,7 +51,5 @@ view model =
     { title = "Output directory"
     , bannerColor = "secondary"
     , body =
-        Page.viewApiCallResult model <|
-            \message ->
-                List.map (\filename -> p [] [ text filename ]) message.path
+        List.map (\filename -> p [] [ text filename ]) model.path
     }

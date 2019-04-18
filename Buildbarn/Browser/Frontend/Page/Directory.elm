@@ -11,15 +11,13 @@ import Json.Decode as JD
 -- MODEL
 
 
-type alias DirectoryResult =
-    Api.CallResult
-        { digest : Api.Digest
-        , directory : REv2.Directory
-        }
-
-
 type alias Model =
-    Maybe DirectoryResult
+    Maybe
+        (Api.CallResult
+            { digest : Api.Digest
+            , directory : REv2.Directory
+            }
+        )
 
 
 init : Api.Digest -> ( Model, Cmd Msg )
@@ -28,10 +26,7 @@ init digest =
     , Api.getMessage
         "directory"
         GotDirectory
-        (JD.map
-            (\directory -> { digest = digest, directory = directory })
-            REv2.directoryDecoder
-        )
+        REv2.directoryDecoder
         digest
     )
 
@@ -41,12 +36,18 @@ init digest =
 
 
 type Msg
-    = GotDirectory DirectoryResult
+    = GotDirectory Api.Digest (Api.CallResult REv2.Directory)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update (GotDirectory directoryResult) model =
-    ( Just directoryResult, Cmd.none )
+update (GotDirectory digest directoryResult) model =
+    ( Just
+        (Result.map
+            (\directory -> { digest = digest, directory = directory })
+            directoryResult
+        )
+    , Cmd.none
+    )
 
 
 

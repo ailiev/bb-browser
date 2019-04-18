@@ -12,12 +12,8 @@ import Http
 -- MODEL
 
 
-type alias CommandResult =
-    Api.CallResult REv2.Command
-
-
 type alias Model =
-    Maybe CommandResult
+    Maybe (Api.CallResult REv2.Command)
 
 
 init : Api.Digest -> ( Model, Cmd Msg )
@@ -32,11 +28,11 @@ init digest =
 
 
 type Msg
-    = GotCommand CommandResult
+    = GotCommand Api.Digest (Api.CallResult REv2.Command)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update (GotCommand commandResult) model =
+update (GotCommand _ commandResult) model =
     ( Just commandResult, Cmd.none )
 
 
