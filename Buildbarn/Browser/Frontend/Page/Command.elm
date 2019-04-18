@@ -4,6 +4,7 @@ import Bootstrap.Utilities.Spacing exposing (my4)
 import Build.Bazel.Remote.Execution.V2.Remote_execution as REv2
 import Buildbarn.Browser.Frontend.Api as Api
 import Buildbarn.Browser.Frontend.Digest exposing (Digest)
+import Buildbarn.Browser.Frontend.Error as Error exposing (Error)
 import Buildbarn.Browser.Frontend.Page as Page
 import Html exposing (h2, text)
 import Http
@@ -14,12 +15,12 @@ import Http
 
 
 type alias Model =
-    Maybe (Api.CallResult REv2.Command)
+    Result Error REv2.Command
 
 
 init : Digest -> ( Model, Cmd Msg )
 init digest =
-    ( Nothing
+    ( Err Error.Loading
     , Api.getMessage "command" GotCommand REv2.commandDecoder digest
     )
 
@@ -29,12 +30,12 @@ init digest =
 
 
 type Msg
-    = GotCommand Digest (Api.CallResult REv2.Command)
+    = GotCommand Digest (Result Error REv2.Command)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update (GotCommand _ commandResult) model =
-    ( Just commandResult, Cmd.none )
+    ( commandResult, Cmd.none )
 
 
 
@@ -46,7 +47,7 @@ view model =
     { title = "Command"
     , bannerColor = "secondary"
     , body =
-        Page.viewApiCallResult model <|
+        Page.viewError model <|
             \command ->
                 [ Page.viewCommandInfo command
                 , h2 [ my4 ] [ text "Output files" ]

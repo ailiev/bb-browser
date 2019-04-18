@@ -12,6 +12,7 @@ import Bootstrap.Utilities.Spacing exposing (my4)
 import Build.Bazel.Remote.Execution.V2.Remote_execution as REv2
 import Buildbarn.Browser.Frontend.Api as Api
 import Buildbarn.Browser.Frontend.Digest exposing (Digest)
+import Buildbarn.Browser.Frontend.Error as Error exposing (Error)
 import Buildbarn.Browser.Frontend.Page as Page
 import Bytes exposing (Bytes)
 import Google.Protobuf.Duration as Duration
@@ -28,28 +29,28 @@ import Url.Builder
 
 
 type alias Model =
-    { action : Maybe (Api.CallResult ActionModel)
-    , actionResult : Maybe (Api.CallResult ActionResultModel)
+    { action : Result Error ActionModel
+    , actionResult : Result Error ActionResultModel
     }
 
 
 type alias ActionModel =
     { data : REv2.Action
-    , command : Maybe (Api.CallResult REv2.Command)
-    , inputRoot : Maybe (Api.CallResult REv2.Directory)
+    , command : Result Error REv2.Command
+    , inputRoot : Result Error REv2.Directory
     }
 
 
 type alias ActionResultModel =
     { data : REv2.ActionResult
-    , stderr : Maybe (Result Http.Error String)
-    , stdout : Maybe (Result Http.Error String)
+    , stderr : Result Error String
+    , stdout : Result Error String
     }
 
 
 initCached : Digest -> ( Model, Cmd Msg )
 initCached digest =
-    ( { action = Nothing, actionResult = Nothing }
+    ( { action = Err Error.Loading, actionResult = Err Error.Loading }
     , Cmd.batch
         [ Api.getMessage "action" GotAction REv2.actionDecoder digest
         , Api.getMessage "action_result" GotActionResult REv2.actionResultDecoder digest
@@ -59,7 +60,7 @@ initCached digest =
 
 initUncached : Digest -> ( Model, Cmd Msg )
 initUncached digest =
-    ( { action = Nothing, actionResult = Nothing }
+    ( { action = Err Error.Loading, actionResult = Err Error.Loading }
     , Api.getMessage "uncached_action_result" GotUncachedActionResult Cas.uncachedActionResultDecoder digest
     )
 
@@ -69,13 +70,13 @@ initUncached digest =
 
 
 type Msg
-    = GotAction Digest (Api.CallResult REv2.Action)
-    | GotActionResult Digest (Api.CallResult REv2.ActionResult)
-    | GotCommand Digest (Api.CallResult REv2.Command)
-    | GotInputRoot Digest (Api.CallResult REv2.Directory)
+    = GotAction Digest (Result Error REv2.Action)
+    | GotActionResult Digest (Result Error REv2.ActionResult)
+    | GotCommand Digest (Result Error REv2.Command)
+    | GotInputRoot Digest (Result Error REv2.Directory)
     | GotStderr (Result Http.Error String)
     | GotStdout (Result Http.Error String)
-    | GotUncachedActionResult Digest (Api.CallResult Cas.UncachedActionResult)
+    | GotUncachedActionResult Digest (Result Error Cas.UncachedActionResult)
 
 
 getCmdForStream : (Result Http.Error String -> msg) -> Bytes -> Maybe REv2.DigestMessage -> Cmd msg
@@ -119,16 +120,14 @@ update msg model =
             ( model
                 |> (mapFieldAction <|
                         \_ ->
-                            Just
-                                (Result.map
-                                    (\data ->
-                                        { data = data
-                                        , command = Nothing
-                                        , inputRoot = Nothing
-                                        }
-                                    )
-                                    action
+                            Result.map
+                                (\data ->
+                                    { data = data
+                                    , command = Err Error.Loading
+                                    , inputRoot = Err Error.Loading
+                                    }
                                 )
+                                action
                    )
             , Cmd.batch
                 [ Api.getChildMessage
@@ -152,15 +151,14 @@ update msg model =
             ( model
                 |> (mapFieldActionResult <|
                         \_ ->
-                            Just <|
-                                Result.map
-                                    (\actionResultMessage ->
-                                        { data = actionResultMessage
-                                        , stdout = Nothing
-                                        , stderr = Nothing
-                                        }
-                                    )
-                                    actionResult
+                            Result.map
+                                (\actionResultMessage ->
+                                    { data = actionResultMessage
+                                    , stdout = Err Error.Loading
+                                    , stderr = Err Error.Loading
+                                    }
+                                )
+                                actionResult
                    )
             , case actionResult of
                 Ok actionResultMessage ->
@@ -173,10 +171,9 @@ update msg model =
         GotCommand _ command ->
             ( model
                 |> (mapFieldAction <|
-                        Maybe.map <|
-                            Result.map <|
-                                mapFieldCommand <|
-                                    \_ -> Just command
+                        Result.map <|
+                            mapFieldCommand <|
+                                \_ -> command
                    )
             , Cmd.none
             )
@@ -184,10 +181,9 @@ update msg model =
         GotInputRoot _ directory ->
             ( model
                 |> (mapFieldAction <|
-                        Maybe.map <|
-                            Result.map <|
-                                mapFieldInputRoot <|
-                                    \_ -> Just directory
+                        Result.map <|
+                            mapFieldInputRoot <|
+                                \_ -> directory
                    )
             , Cmd.none
             )
@@ -195,10 +191,9 @@ update msg model =
         GotStderr body ->
             ( model
                 |> (mapFieldActionResult <|
-                        Maybe.map <|
-                            Result.map <|
-                                mapFieldStderr <|
-                                    \a -> Just body
+                        Result.map <|
+                            mapFieldStderr <|
+                                \a -> Result.mapError Error.Http body
                    )
             , Cmd.none
             )
@@ -206,10 +201,9 @@ update msg model =
         GotStdout body ->
             ( model
                 |> (mapFieldActionResult <|
-                        Maybe.map <|
-                            Result.map <|
-                                mapFieldStdout <|
-                                    \a -> Just body
+                        Result.map <|
+                            mapFieldStdout <|
+                                \a -> Result.mapError Error.Http body
                    )
             , Cmd.none
             )
@@ -217,7 +211,7 @@ update msg model =
         GotUncachedActionResult uncachedActionResultDigest uncachedActionResult ->
             ( case uncachedActionResult of
                 Err e ->
-                    { model | actionResult = Just (Err e) }
+                    { model | actionResult = Err e }
 
                 Ok v ->
                     case v.actionResult of
@@ -227,13 +221,11 @@ update msg model =
                         Just (REv2.ActionResultMessage actionResult) ->
                             { model
                                 | actionResult =
-                                    Just
-                                        (Ok
-                                            { data = actionResult
-                                            , stderr = Nothing
-                                            , stdout = Nothing
-                                            }
-                                        )
+                                    Ok
+                                        { data = actionResult
+                                        , stderr = Err Error.Loading
+                                        , stdout = Err Error.Loading
+                                        }
                             }
             , Api.getChildMessage
                 "action"
@@ -284,7 +276,7 @@ view model =
     { title = "Action"
     , bannerColor =
         case model.actionResult of
-            Just (Ok actionResult) ->
+            Ok actionResult ->
                 if actionResult.data.exitCode == 0 then
                     "success"
 
@@ -294,7 +286,7 @@ view model =
             _ ->
                 "secondary"
     , body =
-        (Page.viewApiCallResult model.action <|
+        (Page.viewError model.action <|
             \actionModel ->
                 [ table [ class "table", style "table-layout" "fixed" ] <|
                     [ tr []
@@ -326,12 +318,12 @@ view model =
                     , sup [] [ a [ href "#" ] [ text "*" ] ]
                     ]
                 ]
-                    ++ (Page.viewApiCallResult actionModel.command <|
+                    ++ (Page.viewError actionModel.command <|
                             \command -> [ Page.viewCommandInfo command ]
                        )
         )
             ++ [ h2 [ my4 ] [ text "Result " ] ]
-            ++ (Page.viewApiCallResult model.actionResult <|
+            ++ (Page.viewError model.actionResult <|
                     \actionResult ->
                         [ table [ class "table", style "table-layout" "fixed" ] <|
                             [ tr []
@@ -354,29 +346,26 @@ view model =
                     , sup [] [ a [ href "#" ] [ text "*" ] ]
                     ]
                ]
-            ++ (Page.viewApiCallResult model.action <|
+            ++ (Page.viewError model.action <|
                     \action ->
-                        Page.viewApiCallResult action.inputRoot <|
+                        Page.viewError action.inputRoot <|
                             -- TODO: Use the right digest.
                             Page.viewDirectory { instance = "", hash = "", sizeBytes = 0 }
                )
             ++ (case
                     ( model.actionResult
-                        |> Maybe.andThen Result.toMaybe
                     , model.action
-                        |> Maybe.andThen Result.toMaybe
-                        |> Maybe.andThen (\actionModel -> actionModel.command)
-                        |> Maybe.andThen Result.toMaybe
+                        |> Result.andThen (\actionModel -> actionModel.command)
                     )
                 of
-                    ( Nothing, Nothing ) ->
+                    ( Err _, Err _ ) ->
                         []
 
                     ( maybeActionResult, maybeCommand ) ->
                         [ h2 [ my4 ] [ text "Output files" ]
                         , Page.viewDirectoryListing <|
                             (case maybeActionResult of
-                                Just actionResult ->
+                                Ok actionResult ->
                                     List.map
                                         (\(REv2.OutputDirectoryMessage entry) ->
                                             Page.viewDirectoryListingEntry
@@ -415,14 +404,14 @@ view model =
                                             )
                                             actionResult.data.outputFileSymlinks
 
-                                Nothing ->
+                                Err _ ->
                                     []
                             )
                                 ++ (case maybeCommand of
-                                        Just command ->
+                                        Ok command ->
                                             []
 
-                                        Nothing ->
+                                        Err _ ->
                                             []
                                    )
                         ]

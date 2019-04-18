@@ -1,10 +1,10 @@
 module Buildbarn.Browser.Frontend.Page exposing
     ( Page
-    , viewApiCallResult
     , viewCommandInfo
     , viewDirectory
     , viewDirectoryListing
     , viewDirectoryListingEntry
+    , viewError
     , viewPage
     )
 
@@ -16,8 +16,8 @@ import Bootstrap.Table as Table
 import Bootstrap.Utilities.Spacing exposing (mb5, my4)
 import Browser
 import Build.Bazel.Remote.Execution.V2.Remote_execution as REv2
-import Buildbarn.Browser.Frontend.Api as Api
 import Buildbarn.Browser.Frontend.Digest as Digest exposing (Digest)
+import Buildbarn.Browser.Frontend.Error as Error exposing (Error)
 import Buildbarn.Browser.Frontend.Shell as Shell
 import Html exposing (a, b, br, div, h1, p, table, td, text, th, tr)
 import Html.Attributes exposing (class, href, style)
@@ -239,35 +239,37 @@ viewDirectoryListing entries =
 {-| Displays a message that the page is still loading, or that a HTTP
 error occurred loading it.
 -}
-viewApiCallResult : Maybe (Api.CallResult a) -> (a -> List (Html.Html msg)) -> List (Html.Html msg)
-viewApiCallResult result display =
+viewError : Result Error a -> (a -> List (Html.Html msg)) -> List (Html.Html msg)
+viewError result display =
     case result of
-        Nothing ->
-            [ p [] [ text "Loading..." ] ]
-
-        Just (Err error) ->
+        Err error ->
             [ p []
                 [ text
                     (case error of
-                        Http.BadUrl message ->
-                            "BadURL " ++ message
+                        Error.Http httpError ->
+                            case httpError of
+                                Http.BadUrl message ->
+                                    "BadURL " ++ message
 
-                        Http.Timeout ->
-                            "Timeout"
+                                Http.Timeout ->
+                                    "Timeout"
 
-                        Http.NetworkError ->
-                            "Network error"
+                                Http.NetworkError ->
+                                    "Network error"
 
-                        Http.BadStatus code ->
-                            "BadCode " ++ String.fromInt code
+                                Http.BadStatus code ->
+                                    "BadCode " ++ String.fromInt code
 
-                        Http.BadBody message ->
-                            "BadBody " ++ message
+                                Http.BadBody message ->
+                                    "BadBody " ++ message
+
+                        Error.Loading ->
+                            "Loading..."
                     )
                 ]
             ]
 
-        Just (Ok message) ->
+        Ok message ->
             display message
 
 
