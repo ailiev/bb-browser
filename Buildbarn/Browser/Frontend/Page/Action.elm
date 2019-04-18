@@ -134,7 +134,7 @@ updateStream model mapStream body =
                                 |> Result.andThen
                                     (\bodyString ->
                                         Parser.run (Terminal.formattedTextFragments Terminal.defaultAttributes) bodyString
-                                            |> Result.map (\v -> v.textFragments)
+                                            |> Result.map .textFragments
                                             |> Result.mapError Error.Parser
                                     )
            )
@@ -163,14 +163,14 @@ update msg model =
                     "command"
                     GotCommand
                     REv2.commandDecoder
-                    (\actionMessage -> actionMessage.commandDigest)
+                    .commandDigest
                     actionDigest
                     action
                 , Api.getChildMessage
                     "directory"
                     GotInputRoot
                     REv2.directoryDecoder
-                    (\actionMessage -> actionMessage.inputRootDigest)
+                    .inputRootDigest
                     actionDigest
                     action
                 ]
@@ -245,12 +245,12 @@ update msg model =
                     "action"
                     GotAction
                     REv2.actionDecoder
-                    (\uncachedActionResultMessage -> uncachedActionResultMessage.actionDigest)
+                    .actionDigest
                     uncachedActionResultDigest
                     uncachedActionResult
                     :: (uncachedActionResult
                             |> Result.toMaybe
-                            |> Maybe.andThen (\v -> v.actionResult)
+                            |> Maybe.andThen .actionResult
                             |> Maybe.map (\(REv2.ActionResultMessage v) -> v)
                             |> getCmdsForActionResult
                        )
