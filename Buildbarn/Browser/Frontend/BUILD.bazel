@@ -15,6 +15,7 @@ elm_library(
     name = "libFrontend",
     srcs = [
         "Api.elm",
+        "Digest.elm",
         "Page.elm",
         "Page/Action.elm",
         "Page/Command.elm",

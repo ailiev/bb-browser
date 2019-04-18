@@ -1,21 +1,21 @@
 module Buildbarn.Browser.Frontend.Route exposing (Route(..), fromUrl)
 
-import Buildbarn.Browser.Frontend.Api as Api
+import Buildbarn.Browser.Frontend.Digest exposing (Digest)
 import Url
 import Url.Parser as Parser exposing ((</>))
 
 
-digestParser : Parser.Parser (Api.Digest -> a) a
+digestParser : Parser.Parser (Digest -> a) a
 digestParser =
-    Parser.map Api.Digest (Parser.string </> Parser.string </> Parser.int)
+    Parser.map Digest (Parser.string </> Parser.string </> Parser.int)
 
 
 type Route
-    = Action Api.Digest
-    | Command Api.Digest
-    | Directory Api.Digest
-    | Tree Api.Digest (List String)
-    | UncachedActionResult Api.Digest
+    = Action Digest
+    | Command Digest
+    | Directory Digest
+    | Tree Digest (List String)
+    | UncachedActionResult Digest
     | Welcome
 
 

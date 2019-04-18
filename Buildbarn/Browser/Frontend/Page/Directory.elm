@@ -2,6 +2,7 @@ module Buildbarn.Browser.Frontend.Page.Directory exposing (Model, Msg, init, upd
 
 import Build.Bazel.Remote.Execution.V2.Remote_execution as REv2
 import Buildbarn.Browser.Frontend.Api as Api
+import Buildbarn.Browser.Frontend.Digest exposing (Digest)
 import Buildbarn.Browser.Frontend.Page as Page
 import Http
 import Json.Decode as JD
@@ -14,13 +15,13 @@ import Json.Decode as JD
 type alias Model =
     Maybe
         (Api.CallResult
-            { digest : Api.Digest
+            { digest : Digest
             , directory : REv2.Directory
             }
         )
 
 
-init : Api.Digest -> ( Model, Cmd Msg )
+init : Digest -> ( Model, Cmd Msg )
 init digest =
     ( Nothing
     , Api.getMessage
@@ -36,7 +37,7 @@ init digest =
 
 
 type Msg
-    = GotDirectory Api.Digest (Api.CallResult REv2.Directory)
+    = GotDirectory Digest (Api.CallResult REv2.Directory)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )

@@ -1,21 +1,14 @@
 module Buildbarn.Browser.Frontend.Api exposing
     ( CallResult
-    , Digest
     , getChildMessage
     , getMessage
     )
 
 import Build.Bazel.Remote.Execution.V2.Remote_execution as REv2
+import Buildbarn.Browser.Frontend.Digest as Digest exposing (Digest)
 import Http
 import Json.Decode as JD
 import Url.Builder
-
-
-type alias Digest =
-    { instance : String
-    , hash : String
-    , sizeBytes : Int
-    }
 
 
 type alias CallResult message =
@@ -45,10 +38,7 @@ getChildMessage endpoint toMsg decoder getChildDigest parentDigest parentResult 
                     getMessage endpoint
                         toMsg
                         decoder
-                        { instance = parentDigest.instance
-                        , hash = childDigest.hash
-                        , sizeBytes = childDigest.sizeBytes
-                        }
+                        (Digest.getDerived parentDigest childDigest)
 
                 _ ->
                     Cmd.none

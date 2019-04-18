@@ -3,6 +3,7 @@ module Buildbarn.Browser.Frontend.Page.Command exposing (Model, Msg, init, updat
 import Bootstrap.Utilities.Spacing exposing (my4)
 import Build.Bazel.Remote.Execution.V2.Remote_execution as REv2
 import Buildbarn.Browser.Frontend.Api as Api
+import Buildbarn.Browser.Frontend.Digest exposing (Digest)
 import Buildbarn.Browser.Frontend.Page as Page
 import Html exposing (h2, text)
 import Http
@@ -16,7 +17,7 @@ type alias Model =
     Maybe (Api.CallResult REv2.Command)
 
 
-init : Api.Digest -> ( Model, Cmd Msg )
+init : Digest -> ( Model, Cmd Msg )
 init digest =
     ( Nothing
     , Api.getMessage "command" GotCommand REv2.commandDecoder digest
@@ -28,7 +29,7 @@ init digest =
 
 
 type Msg
-    = GotCommand Api.Digest (Api.CallResult REv2.Command)
+    = GotCommand Digest (Api.CallResult REv2.Command)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )

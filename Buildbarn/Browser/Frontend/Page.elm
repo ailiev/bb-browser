@@ -17,6 +17,7 @@ import Bootstrap.Utilities.Spacing exposing (mb5, my4)
 import Browser
 import Build.Bazel.Remote.Execution.V2.Remote_execution as REv2
 import Buildbarn.Browser.Frontend.Api as Api
+import Buildbarn.Browser.Frontend.Digest as Digest exposing (Digest)
 import Buildbarn.Browser.Frontend.Shell as Shell
 import Html exposing (a, b, br, div, h1, p, table, td, text, th, tr)
 import Html.Attributes exposing (class, href, style)
@@ -113,7 +114,7 @@ viewCommandInfo command =
                )
 
 
-viewDirectory : Api.Digest -> REv2.Directory -> List (Html.Html msg)
+viewDirectory : Digest -> REv2.Directory -> List (Html.Html msg)
 viewDirectory digest directory =
     [ viewDirectoryListing <|
         List.map
@@ -128,12 +129,16 @@ viewDirectory digest directory =
                         Just (REv2.DigestMessage childDigest) ->
                             a
                                 [ href <|
+                                    let
+                                        derivedDigest =
+                                            Digest.getDerived digest childDigest
+                                    in
                                     "#directory/"
-                                        ++ digest.instance
+                                        ++ derivedDigest.instance
                                         ++ "/"
-                                        ++ childDigest.hash
+                                        ++ derivedDigest.hash
                                         ++ "/"
-                                        ++ String.fromInt childDigest.sizeBytes
+                                        ++ String.fromInt derivedDigest.sizeBytes
                                 ]
                                 [ text entry.name ]
                     , text "/"
@@ -157,11 +162,15 @@ viewDirectory digest directory =
                             Just (REv2.DigestMessage childDigest) ->
                                 a
                                     [ href <|
+                                        let
+                                            derivedDigest =
+                                                Digest.getDerived digest childDigest
+                                        in
                                         Url.Builder.absolute
                                             [ "file"
-                                            , digest.instance
-                                            , childDigest.hash
-                                            , String.fromInt childDigest.sizeBytes
+                                            , derivedDigest.instance
+                                            , derivedDigest.hash
+                                            , String.fromInt derivedDigest.sizeBytes
                                             , entry.name
                                             ]
                                             []

@@ -11,6 +11,7 @@ import Bootstrap.Badge as Badge
 import Bootstrap.Utilities.Spacing exposing (my4)
 import Build.Bazel.Remote.Execution.V2.Remote_execution as REv2
 import Buildbarn.Browser.Frontend.Api as Api
+import Buildbarn.Browser.Frontend.Digest exposing (Digest)
 import Buildbarn.Browser.Frontend.Page as Page
 import Google.Protobuf.Duration as Duration
 import Html exposing (a, h2, p, sup, table, td, text, th, tr)
@@ -37,7 +38,7 @@ type alias ActionModel =
     }
 
 
-initCached : Api.Digest -> ( Model, Cmd Msg )
+initCached : Digest -> ( Model, Cmd Msg )
 initCached digest =
     ( { action = Nothing, actionResult = Nothing }
     , Cmd.batch
@@ -47,7 +48,7 @@ initCached digest =
     )
 
 
-initUncached : Api.Digest -> ( Model, Cmd Msg )
+initUncached : Digest -> ( Model, Cmd Msg )
 initUncached digest =
     ( { action = Nothing, actionResult = Nothing }
     , Api.getMessage "uncached_action_result" GotUncachedActionResult Cas.uncachedActionResultDecoder digest
@@ -59,11 +60,11 @@ initUncached digest =
 
 
 type Msg
-    = GotAction Api.Digest (Api.CallResult REv2.Action)
-    | GotActionResult Api.Digest (Api.CallResult REv2.ActionResult)
-    | GotCommand Api.Digest (Api.CallResult REv2.Command)
-    | GotInputRoot Api.Digest (Api.CallResult REv2.Directory)
-    | GotUncachedActionResult Api.Digest (Api.CallResult Cas.UncachedActionResult)
+    = GotAction Digest (Api.CallResult REv2.Action)
+    | GotActionResult Digest (Api.CallResult REv2.ActionResult)
+    | GotCommand Digest (Api.CallResult REv2.Command)
+    | GotInputRoot Digest (Api.CallResult REv2.Directory)
+    | GotUncachedActionResult Digest (Api.CallResult Cas.UncachedActionResult)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
