@@ -1,6 +1,7 @@
 module Buildbarn.Browser.Frontend.Terminal exposing
     ( Attributes
     , Color(..)
+    , FormattedTextFragment
     , FormattedTextFragments
     , InputSequence(..)
     , defaultAttributes
@@ -174,8 +175,12 @@ applyAttribute code attributes =
             attributes
 
 
+type alias FormattedTextFragment =
+    ( Attributes, String )
+
+
 type alias FormattedTextFragments =
-    { textFragments : List ( Attributes, String )
+    { textFragments : List FormattedTextFragment
     , finalAttributes : Attributes
     }
 

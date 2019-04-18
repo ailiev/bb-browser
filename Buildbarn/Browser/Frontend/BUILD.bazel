@@ -30,6 +30,7 @@ elm_library(
         ":CAS",
         ":REv2",
         ":Shell",
+        ":Terminal",
         "@elm_package_elm_browser",
         "@elm_package_elm_html",
         "@elm_package_elm_http",

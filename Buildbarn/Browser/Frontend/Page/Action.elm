@@ -14,12 +14,14 @@ import Buildbarn.Browser.Frontend.Api as Api
 import Buildbarn.Browser.Frontend.Digest exposing (Digest)
 import Buildbarn.Browser.Frontend.Error as Error exposing (Error)
 import Buildbarn.Browser.Frontend.Page as Page
+import Buildbarn.Browser.Frontend.Terminal as Terminal
 import Bytes exposing (Bytes)
 import Google.Protobuf.Duration as Duration
 import Html exposing (Html, a, h2, p, sup, table, td, text, th, tr)
 import Html.Attributes exposing (class, href, style)
 import Http
 import Json.Decode as JD
+import Parser
 import Pkg.Proto.Cas.Cas as Cas
 import Url.Builder
 
@@ -41,10 +43,14 @@ type alias ActionModel =
     }
 
 
+type alias StreamModel =
+    List Terminal.FormattedTextFragment
+
+
 type alias ActionResultModel =
     { data : REv2.ActionResult
-    , stderr : Result Error String
-    , stdout : Result Error String
+    , stderr : Result Error StreamModel
+    , stdout : Result Error StreamModel
     }
 
 
@@ -91,7 +97,7 @@ getCmdForStream toMsg raw maybeDigest =
                 Http.get
                     { url =
                         Url.Builder.relative
-                            [ "file "
+                            [ "file"
                             , "TODO"
                             , digest.hash
                             , String.fromInt digest.sizeBytes
@@ -105,12 +111,35 @@ getCmdForStream toMsg raw maybeDigest =
                 Cmd.none
 
 
-getCmdsForActionResult : REv2.ActionResult -> Cmd Msg
-getCmdsForActionResult actionResult =
-    Cmd.batch
-        [ getCmdForStream GotStderr actionResult.stderrRaw actionResult.stderrDigest
-        , getCmdForStream GotStdout actionResult.stdoutRaw actionResult.stdoutDigest
-        ]
+getCmdsForActionResult : Maybe REv2.ActionResult -> List (Cmd Msg)
+getCmdsForActionResult maybeActionResult =
+    case maybeActionResult of
+        Just actionResult ->
+            [ getCmdForStream GotStderr actionResult.stderrRaw actionResult.stderrDigest
+            , getCmdForStream GotStdout actionResult.stdoutRaw actionResult.stdoutDigest
+            ]
+
+        Nothing ->
+            []
+
+
+updateStream : Model -> ((Result Error StreamModel -> Result Error StreamModel) -> ActionResultModel -> ActionResultModel) -> Result Http.Error String -> ( Model, Cmd Msg )
+updateStream model mapStream body =
+    ( model
+        |> (mapFieldActionResult <|
+                Result.map <|
+                    mapStream <|
+                        \_ ->
+                            Result.mapError Error.Http body
+                                |> Result.andThen
+                                    (\bodyString ->
+                                        Parser.run (Terminal.formattedTextFragments Terminal.defaultAttributes) bodyString
+                                            |> Result.map (\v -> v.textFragments)
+                                            |> Result.mapError Error.Parser
+                                    )
+           )
+    , Cmd.none
+    )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -160,12 +189,10 @@ update msg model =
                                 )
                                 actionResult
                    )
-            , case actionResult of
-                Ok actionResultMessage ->
-                    getCmdsForActionResult actionResultMessage
-
-                _ ->
-                    Cmd.none
+            , actionResult
+                |> Result.toMaybe
+                |> getCmdsForActionResult
+                |> Cmd.batch
             )
 
         GotCommand _ command ->
@@ -189,24 +216,10 @@ update msg model =
             )
 
         GotStderr body ->
-            ( model
-                |> (mapFieldActionResult <|
-                        Result.map <|
-                            mapFieldStderr <|
-                                \a -> Result.mapError Error.Http body
-                   )
-            , Cmd.none
-            )
+            updateStream model mapFieldStderr body
 
         GotStdout body ->
-            ( model
-                |> (mapFieldActionResult <|
-                        Result.map <|
-                            mapFieldStdout <|
-                                \a -> Result.mapError Error.Http body
-                   )
-            , Cmd.none
-            )
+            updateStream model mapFieldStdout body
 
         GotUncachedActionResult uncachedActionResultDigest uncachedActionResult ->
             ( case uncachedActionResult of
@@ -227,13 +240,20 @@ update msg model =
                                         , stdout = Err Error.Loading
                                         }
                             }
-            , Api.getChildMessage
-                "action"
-                GotAction
-                REv2.actionDecoder
-                (\uncachedActionResultMessage -> uncachedActionResultMessage.actionDigest)
-                uncachedActionResultDigest
-                uncachedActionResult
+            , Cmd.batch <|
+                Api.getChildMessage
+                    "action"
+                    GotAction
+                    REv2.actionDecoder
+                    (\uncachedActionResultMessage -> uncachedActionResultMessage.actionDigest)
+                    uncachedActionResultDigest
+                    uncachedActionResult
+                    :: (uncachedActionResult
+                            |> Result.toMaybe
+                            |> Maybe.andThen (\v -> v.actionResult)
+                            |> Maybe.map (\(REv2.ActionResultMessage v) -> v)
+                            |> getCmdsForActionResult
+                       )
             )
 
 

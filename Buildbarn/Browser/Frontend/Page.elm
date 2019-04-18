@@ -265,6 +265,9 @@ viewError result display =
 
                         Error.Loading ->
                             "Loading..."
+
+                        Error.Parser _ ->
+                            "Parse error"
                     )
                 ]
             ]
