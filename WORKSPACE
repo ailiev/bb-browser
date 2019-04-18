@@ -147,6 +147,13 @@ elm_repository(
 )
 
 elm_repository(
+    name = "elm_package_elm_parser",
+    sha256 = "2294a3274ee08fdb6fec78983c00d71f9516e53e175a3f7d7abc9eba76ee6c28",
+    strip_prefix = "parser-1.1.0",
+    urls = ["https://github.com/elm/parser/archive/1.1.0.tar.gz"],
+)
+
+elm_repository(
     name = "elm_package_elm_random",
     sha256 = "b4b9dc99d5a064bc607684dd158199208bce51c0521b7e8a515c365e0a11168d",
     strip_prefix = "random-1.0.0",

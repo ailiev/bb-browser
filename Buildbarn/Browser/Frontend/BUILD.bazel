@@ -50,6 +50,21 @@ elm_test(
     ],
 )
 
+elm_library(
+    name = "Terminal",
+    srcs = ["Terminal.elm"],
+    deps = ["@elm_package_elm_parser"],
+)
+
+elm_test(
+    name = "TerminalTest",
+    main = "TerminalTest.elm",
+    deps = [
+        ":Terminal",
+        "@elm_package_elm_explorations_test",
+    ],
+)
+
 elm_binary(
     name = "Frontend",
     main = "Main.elm",
