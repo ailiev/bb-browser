@@ -81,7 +81,6 @@ func NewBrowserService(contentAddressableStorage cas.ContentAddressableStorage, 
 		actionCache:                         actionCache,
 		templates:                           templates,
 	}
-	router.HandleFunc("/", s.handleWelcome)
 	router.HandleFunc("/action/{instance}/{hash}/{sizeBytes}/", s.handleAction)
 	router.HandleFunc("/build_events/{instance}/{invocationID}", s.handleBuildEvents)
 	router.HandleFunc("/directory/{instance}/{hash}/{sizeBytes}/", s.handleDirectory)
@@ -89,12 +88,6 @@ func NewBrowserService(contentAddressableStorage cas.ContentAddressableStorage, 
 	router.HandleFunc("/tree/{instance}/{hash}/{sizeBytes}/{subdirectory:(?:.*/)?}", s.handleTree)
 	router.HandleFunc("/uncached_action_result/{instance}/{hash}/{sizeBytes}/", s.handleUncachedActionResult)
 	return s
-}
-
-func (s *BrowserService) handleWelcome(w http.ResponseWriter, req *http.Request) {
-	if err := s.templates.ExecuteTemplate(w, "page_welcome.html", nil); err != nil {
-		log.Print(err)
-	}
 }
 
 type directoryInfo struct {
