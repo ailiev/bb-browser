@@ -54,8 +54,7 @@ inputSequence =
 
 
 type Color
-    = Default
-    | Black
+    = Black
     | Red
     | Green
     | Brown
@@ -70,8 +69,8 @@ type alias Attributes =
     , underline : Bool
     , blink : Bool
     , reverse : Bool
-    , foreground : Color
-    , background : Color
+    , foreground : Maybe Color
+    , background : Maybe Color
     }
 
 
@@ -81,8 +80,8 @@ defaultAttributes =
     , underline = False
     , blink = False
     , reverse = False
-    , foreground = Default
-    , background = Default
+    , foreground = Nothing
+    , background = Nothing
     }
 
 
@@ -117,58 +116,58 @@ applyAttribute code attributes =
             { attributes | reverse = False }
 
         30 ->
-            { attributes | foreground = Black }
+            { attributes | foreground = Just Black }
 
         31 ->
-            { attributes | foreground = Red }
+            { attributes | foreground = Just Red }
 
         32 ->
-            { attributes | foreground = Green }
+            { attributes | foreground = Just Green }
 
         33 ->
-            { attributes | foreground = Brown }
+            { attributes | foreground = Just Brown }
 
         34 ->
-            { attributes | foreground = Blue }
+            { attributes | foreground = Just Blue }
 
         35 ->
-            { attributes | foreground = Magenta }
+            { attributes | foreground = Just Magenta }
 
         36 ->
-            { attributes | foreground = Cyan }
+            { attributes | foreground = Just Cyan }
 
         37 ->
-            { attributes | foreground = White }
+            { attributes | foreground = Just White }
 
         39 ->
-            { attributes | foreground = Default }
+            { attributes | foreground = Nothing }
 
         40 ->
-            { attributes | background = Black }
+            { attributes | background = Just Black }
 
         41 ->
-            { attributes | background = Red }
+            { attributes | background = Just Red }
 
         42 ->
-            { attributes | background = Green }
+            { attributes | background = Just Green }
 
         43 ->
-            { attributes | background = Brown }
+            { attributes | background = Just Brown }
 
         44 ->
-            { attributes | background = Blue }
+            { attributes | background = Just Blue }
 
         45 ->
-            { attributes | background = Magenta }
+            { attributes | background = Just Magenta }
 
         46 ->
-            { attributes | background = Cyan }
+            { attributes | background = Just Cyan }
 
         47 ->
-            { attributes | background = White }
+            { attributes | background = Just White }
 
         49 ->
-            { attributes | background = Default }
+            { attributes | background = Nothing }
 
         _ ->
             -- Unknown attribute code (e.g., 256 colors). Skip these for now.
