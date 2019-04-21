@@ -8,6 +8,8 @@ go_library(
     srcs = [
         ":BootstrapCSS",
         ":BootstrapJS",
+        ":FrontendJS",
+        ":IndexHTML",
         ":JQueryJS",
         ":TerminalCSS",
     ],
@@ -24,6 +26,18 @@ bundle_file(
 bundle_file(
     name = "BootstrapJS",
     src = "@com_github_twbs_bootstrap//:js/bootstrap.min.js",
+    package = "assets",
+)
+
+bundle_file(
+    name = "FrontendJS",
+    src = "//Buildbarn/Browser/Frontend",
+    package = "assets",
+)
+
+bundle_file(
+    name = "IndexHTML",
+    src = "index.html",
     package = "assets",
 )
 
