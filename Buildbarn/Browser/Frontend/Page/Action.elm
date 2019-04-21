@@ -17,7 +17,7 @@ import Buildbarn.Browser.Frontend.Page as Page
 import Buildbarn.Browser.Frontend.Terminal as Terminal
 import Bytes exposing (Bytes)
 import Google.Protobuf.Duration as Duration
-import Html exposing (Html, a, h2, p, sup, table, td, text, th, tr)
+import Html exposing (Html, a, div, h2, p, span, sup, table, td, text, th, tr)
 import Html.Attributes exposing (class, href, style)
 import Http
 import Json.Decode as JD
@@ -359,6 +359,8 @@ view model =
                                     ]
                                 ]
                             ]
+                                ++ viewStream "Standard output" actionResult.stdout
+                                ++ viewStream "Standard error" actionResult.stderr
                         ]
                )
             ++ [ h2 [ my4 ]
@@ -437,3 +439,132 @@ view model =
                         ]
                )
     }
+
+
+convertColor : Terminal.Color -> Bool -> String
+convertColor color bold =
+    if bold then
+        case color of
+            Terminal.Black ->
+                "#7f7f7f"
+
+            Terminal.Red ->
+                "#ff0000"
+
+            Terminal.Green ->
+                "#00ff00"
+
+            Terminal.Brown ->
+                "#ffff00"
+
+            Terminal.Blue ->
+                "#5c5cff"
+
+            Terminal.Magenta ->
+                "#ff00ff"
+
+            Terminal.Cyan ->
+                "#00ffff"
+
+            Terminal.White ->
+                "#ffffff"
+
+    else
+        case color of
+            Terminal.Black ->
+                "#000000"
+
+            Terminal.Red ->
+                "#cd0000"
+
+            Terminal.Green ->
+                "#00cd00"
+
+            Terminal.Brown ->
+                "#cdcd00"
+
+            Terminal.Blue ->
+                "#0000ee"
+
+            Terminal.Magenta ->
+                "#cd00cd"
+
+            Terminal.Cyan ->
+                "#00cdcd"
+
+            Terminal.White ->
+                "#e5e5e5"
+
+
+convertTerminalAttributes : Terminal.Attributes -> List (Html.Attribute msg)
+convertTerminalAttributes attributes =
+    (if attributes.bold then
+        [ style "font-weight" "bold" ]
+
+     else
+        []
+    )
+        ++ (if attributes.underline then
+                [ style "text-decoration" "underline" ]
+
+            else
+                []
+           )
+        ++ (let
+                foreground =
+                    convertColor
+                        (Maybe.withDefault Terminal.White attributes.foreground)
+                        attributes.bold
+
+                background =
+                    convertColor
+                        (Maybe.withDefault Terminal.Black attributes.background)
+                        False
+            in
+            [ style "color" <|
+                if attributes.reverse then
+                    background
+
+                else
+                    foreground
+            , style "background-color" <|
+                if attributes.reverse then
+                    foreground
+
+                else
+                    background
+            ]
+           )
+
+
+viewStream : String -> Result Error StreamModel -> List (Html msg)
+viewStream name model =
+    [ tr []
+        [ th [ style "width" "25%" ]
+            [ text name
+
+            -- TODO: Link to log.
+            , text ":"
+            ]
+        , td [ style "width" "75%" ] <|
+            Page.viewError model <|
+                \stream ->
+                    [ stream
+                        |> List.map
+                            (\( attributes, body ) ->
+                                span (convertTerminalAttributes attributes) [ text body ]
+                            )
+                        |> div
+                            [ class "text-monospace"
+                            , style "background-color" "#000000"
+                            , style "border-radius" "5px"
+                            , style "font-size" "12px"
+                            , style "line-height" "20px"
+                            , style "overflow-wrap" "break-word"
+                            , style "padding" "14px 18px"
+                            , style "white-space" "pre-wrap"
+                            , style "word-break" "break-word"
+                            ]
+                    ]
+        ]
+    ]
