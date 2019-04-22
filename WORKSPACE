@@ -46,9 +46,9 @@ http_archive(
 
 http_archive(
     name = "com_github_edschouten_rules_elm",
-    sha256 = "c34015356f755e5c8dd26c5a82ff9710353f925f435861892fb80a929fa07445",
-    strip_prefix = "rules_elm-0.2",
-    urls = ["https://github.com/EdSchouten/rules_elm/archive/v0.2.tar.gz"],
+    sha256 = "0b8a4e288ce9fe255074adb07be443cdda3a9fa9667de775b01decb93507a6d7",
+    strip_prefix = "rules_elm-0.3",
+    urls = ["https://github.com/EdSchouten/rules_elm/archive/v0.3.tar.gz"],
 )
 
 http_archive(
@@ -237,6 +237,12 @@ http_archive(
     urls = ["https://github.com/googleapis/googleapis/archive/143084a2624b6591ee1f9d23e7f5241856642f4d.zip"],
 )
 
-load("@build_bazel_rules_nodejs//:defs.bzl", "node_repositories")
+load("@build_bazel_rules_nodejs//:defs.bzl", "node_repositories", "yarn_install")
 
 node_repositories()
+
+yarn_install(
+    name = "npm",
+    package_json = "//:package.json",
+    yarn_lock = "//:yarn.lock",
+)
