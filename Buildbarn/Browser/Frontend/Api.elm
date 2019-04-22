@@ -11,9 +11,10 @@ import Json.Decode as JD
 import Url.Builder
 
 
-getMessage : String -> (Digest -> Result Error a -> msg) -> JD.Decoder a -> Digest -> Cmd msg
+getMessage : String -> (Digest -> Result Error a -> msg) -> JD.Decoder a -> Digest -> ( Error, Cmd msg )
 getMessage endpoint toMsg decoder digest =
-    Http.get
+    ( Error.Loading
+    , Http.get
         { url =
             Url.Builder.relative
                 [ "api", "get_" ++ endpoint ]
@@ -26,21 +27,19 @@ getMessage endpoint toMsg decoder digest =
                 (\result -> toMsg digest <| Result.mapError Error.Http result)
                 decoder
         }
+    )
 
 
-getChildMessage : String -> (Digest -> Result Error a -> msg) -> JD.Decoder a -> (b -> Maybe REv2.DigestMessage) -> Digest -> Result Error b -> Cmd msg
-getChildMessage endpoint toMsg decoder getChildDigest parentDigest parentResult =
-    case parentResult of
-        Ok parent ->
-            case getChildDigest parent of
-                Just (REv2.DigestMessage childDigest) ->
-                    getMessage endpoint
-                        toMsg
-                        decoder
-                        (Digest.getDerived parentDigest childDigest)
+getChildMessage : String -> (Digest -> Result Error a -> msg) -> JD.Decoder a -> Maybe REv2.DigestMessage -> Digest -> ( Error, Cmd msg )
+getChildMessage endpoint toMsg decoder maybeChildDigest parentDigest =
+    case maybeChildDigest of
+        Just (REv2.DigestMessage childDigest) ->
+            getMessage endpoint
+                toMsg
+                decoder
+                (Digest.getDerived parentDigest childDigest)
 
-                _ ->
-                    Cmd.none
-
-        _ ->
-            Cmd.none
+        Nothing ->
+            ( Error.ChildMessageMissing
+            , Cmd.none
+            )

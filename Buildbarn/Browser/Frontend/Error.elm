@@ -5,6 +5,8 @@ import Parser
 
 
 type Error
-    = Http Http.Error
+    = ChildMessageMissing
+    | Http Http.Error
+    | InvalidUtf8
     | Loading
     | Parser (List Parser.DeadEnd)

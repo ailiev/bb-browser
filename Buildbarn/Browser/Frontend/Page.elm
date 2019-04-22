@@ -246,6 +246,9 @@ viewError result display =
             [ p []
                 [ text
                     (case error of
+                        Error.ChildMessageMissing ->
+                            "Child message missing"
+
                         Error.Http httpError ->
                             case httpError of
                                 Http.BadUrl message ->
@@ -262,6 +265,9 @@ viewError result display =
 
                                 Http.BadBody message ->
                                     "BadBody " ++ message
+
+                        Error.InvalidUtf8 ->
+                            "Invalid UTF-8"
 
                         Error.Loading ->
                             "Loading..."

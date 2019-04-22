@@ -22,13 +22,15 @@ type alias Model =
 
 init : Digest -> ( Model, Cmd Msg )
 init digest =
-    ( Err Error.Loading
-    , Api.getMessage
-        "directory"
-        GotDirectory
-        REv2.directoryDecoder
-        digest
-    )
+    let
+        ( e, cmd ) =
+            Api.getMessage
+                "directory"
+                GotDirectory
+                REv2.directoryDecoder
+                digest
+    in
+    ( Err e, cmd )
 
 
 

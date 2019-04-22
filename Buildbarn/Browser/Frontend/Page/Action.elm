@@ -16,6 +16,7 @@ import Buildbarn.Browser.Frontend.Error as Error exposing (Error)
 import Buildbarn.Browser.Frontend.Page as Page
 import Buildbarn.Browser.Frontend.Terminal as Terminal
 import Bytes exposing (Bytes)
+import Bytes.Decode as BD
 import Google.Protobuf.Duration as Duration
 import Html exposing (Html, a, div, h2, p, span, sup, table, td, text, th, tr)
 import Html.Attributes exposing (class, href, style)
@@ -43,8 +44,92 @@ type alias ActionModel =
     }
 
 
+initActionModel : Digest -> REv2.Action -> ( ActionModel, Cmd Msg )
+initActionModel digest action =
+    let
+        ( commandError, commandCmds ) =
+            Api.getChildMessage
+                "command"
+                GotCommand
+                REv2.commandDecoder
+                action.commandDigest
+                digest
+
+        ( inputRootError, inputRootCmds ) =
+            Api.getChildMessage
+                "directory"
+                GotInputRoot
+                REv2.directoryDecoder
+                action.inputRootDigest
+                digest
+    in
+    ( { data = action
+      , command = Err commandError
+      , inputRoot = Err inputRootError
+      }
+    , Cmd.batch [ commandCmds, inputRootCmds ]
+    )
+
+
 type alias StreamModel =
     List Terminal.FormattedTextFragment
+
+
+initStreamModelString : String -> ( Result Error StreamModel, Cmd Msg )
+initStreamModelString str =
+    ( Parser.run (Terminal.formattedTextFragments Terminal.defaultAttributes) str
+        |> Result.map .textFragments
+        |> Result.mapError Error.Parser
+    , Cmd.none
+    )
+
+
+initStreamModelRaw : Bytes -> ( Result Error StreamModel, Cmd Msg )
+initStreamModelRaw raw =
+    case BD.decode (BD.string (Bytes.width raw)) raw of
+        Just str ->
+            initStreamModelString str
+
+        _ ->
+            ( Err Error.InvalidUtf8, Cmd.none )
+
+
+initStreamModelDigest : REv2.Digest -> (Result Http.Error String -> Msg) -> ( Result Error StreamModel, Cmd Msg )
+initStreamModelDigest digest toMsg =
+    -- TODO: Fail if the size is too big.
+    -- TODO: Fill in the right instance name.
+    ( Err Error.Loading
+    , Http.get
+        { url =
+            Url.Builder.relative
+                [ "file"
+                , "TODO"
+                , digest.hash
+                , String.fromInt digest.sizeBytes
+                , "log.txt"
+                ]
+                []
+        , expect = Http.expectString toMsg
+        }
+    )
+
+
+initStreamModel : Bytes -> Maybe REv2.DigestMessage -> (Result Http.Error String -> Msg) -> ( Result Error StreamModel, Cmd Msg )
+initStreamModel raw maybeDigest toMsg =
+    if Bytes.width raw > 0 then
+        initStreamModelRaw raw
+
+    else
+        case maybeDigest of
+            Just (REv2.DigestMessage digest) ->
+                if digest.sizeBytes > 0 then
+                    initStreamModelDigest digest toMsg
+
+                else
+                    initStreamModelRaw raw
+
+            _ ->
+                initStreamModelRaw raw
 
 
 type alias ActionResultModel =
@@ -54,21 +139,56 @@ type alias ActionResultModel =
     }
 
 
+initActionResultModel : REv2.ActionResult -> ( ActionResultModel, Cmd Msg )
+initActionResultModel actionResult =
+    let
+        ( stdout, stdoutCmds ) =
+            initStreamModel actionResult.stdoutRaw actionResult.stdoutDigest GotStdout
+
+        ( stderr, stderrCmds ) =
+            initStreamModel actionResult.stderrRaw actionResult.stderrDigest GotStderr
+    in
+    ( { data = actionResult
+      , stdout = stdout
+      , stderr = stderr
+      }
+    , Cmd.batch [ stdoutCmds, stderrCmds ]
+    )
+
+
 initCached : Digest -> ( Model, Cmd Msg )
 initCached digest =
-    ( { action = Err Error.Loading, actionResult = Err Error.Loading }
-    , Cmd.batch
-        [ Api.getMessage "action" GotAction REv2.actionDecoder digest
-        , Api.getMessage "action_result" GotActionResult REv2.actionResultDecoder digest
-        ]
+    let
+        ( action, actionCmd ) =
+            Api.getMessage
+                "action"
+                GotAction
+                REv2.actionDecoder
+                digest
+
+        ( actionResult, actionResultCmd ) =
+            Api.getMessage
+                "action_result"
+                GotActionResult
+                REv2.actionResultDecoder
+                digest
+    in
+    ( { action = Err action, actionResult = Err action }
+    , Cmd.batch [ actionCmd, actionResultCmd ]
     )
 
 
 initUncached : Digest -> ( Model, Cmd Msg )
 initUncached digest =
-    ( { action = Err Error.Loading, actionResult = Err Error.Loading }
-    , Api.getMessage "uncached_action_result" GotUncachedActionResult Cas.uncachedActionResultDecoder digest
-    )
+    let
+        ( e, cmd ) =
+            Api.getMessage
+                "uncached_action_result"
+                GotUncachedActionResult
+                Cas.uncachedActionResultDecoder
+                digest
+    in
+    ( { action = Err e, actionResult = Err e }, cmd )
 
 
 
@@ -83,44 +203,6 @@ type Msg
     | GotStderr (Result Http.Error String)
     | GotStdout (Result Http.Error String)
     | GotUncachedActionResult Digest (Result Error Cas.UncachedActionResult)
-
-
-getCmdForStream : (Result Http.Error String -> msg) -> Bytes -> Maybe REv2.DigestMessage -> Cmd msg
-getCmdForStream toMsg raw maybeDigest =
-    if Bytes.width raw > 0 then
-        Cmd.none
-
-    else
-        case maybeDigest of
-            Just (REv2.DigestMessage digest) ->
-                -- TODO: Add size limit.
-                Http.get
-                    { url =
-                        Url.Builder.relative
-                            [ "file"
-                            , "TODO"
-                            , digest.hash
-                            , String.fromInt digest.sizeBytes
-                            , "log.txt"
-                            ]
-                            []
-                    , expect = Http.expectString toMsg
-                    }
-
-            _ ->
-                Cmd.none
-
-
-getCmdsForActionResult : Maybe REv2.ActionResult -> List (Cmd Msg)
-getCmdsForActionResult maybeActionResult =
-    case maybeActionResult of
-        Just actionResult ->
-            [ getCmdForStream GotStderr actionResult.stderrRaw actionResult.stderrDigest
-            , getCmdForStream GotStdout actionResult.stdoutRaw actionResult.stdoutDigest
-            ]
-
-        Nothing ->
-            []
 
 
 updateStream : Model -> ((Result Error StreamModel -> Result Error StreamModel) -> ActionResultModel -> ActionResultModel) -> Result Http.Error String -> ( Model, Cmd Msg )
@@ -145,55 +227,29 @@ updateStream model mapStream body =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        GotAction actionDigest action ->
-            ( model
-                |> (mapFieldAction <|
-                        \_ ->
-                            Result.map
-                                (\data ->
-                                    { data = data
-                                    , command = Err Error.Loading
-                                    , inputRoot = Err Error.Loading
-                                    }
-                                )
-                                action
-                   )
-            , Cmd.batch
-                [ Api.getChildMessage
-                    "command"
-                    GotCommand
-                    REv2.commandDecoder
-                    .commandDigest
-                    actionDigest
-                    action
-                , Api.getChildMessage
-                    "directory"
-                    GotInputRoot
-                    REv2.directoryDecoder
-                    .inputRootDigest
-                    actionDigest
-                    action
-                ]
-            )
+        GotAction actionDigest maybeAction ->
+            case maybeAction of
+                Err e ->
+                    ( { model | action = Err e }, Cmd.none )
 
-        GotActionResult _ actionResult ->
-            ( model
-                |> (mapFieldActionResult <|
-                        \_ ->
-                            Result.map
-                                (\actionResultMessage ->
-                                    { data = actionResultMessage
-                                    , stdout = Err Error.Loading
-                                    , stderr = Err Error.Loading
-                                    }
-                                )
-                                actionResult
-                   )
-            , actionResult
-                |> Result.toMaybe
-                |> getCmdsForActionResult
-                |> Cmd.batch
-            )
+                Ok action ->
+                    let
+                        ( actionModel, cmds ) =
+                            initActionModel actionDigest action
+                    in
+                    ( { model | action = Ok actionModel }, cmds )
+
+        GotActionResult _ maybeActionResult ->
+            case maybeActionResult of
+                Err e ->
+                    ( { model | actionResult = Err e }, Cmd.none )
+
+                Ok actionResult ->
+                    let
+                        ( actionResultModel, cmds ) =
+                            initActionResultModel actionResult
+                    in
+                    ( { model | actionResult = Ok actionResultModel }, cmds )
 
         GotCommand _ command ->
             ( model
@@ -221,40 +277,35 @@ update msg model =
         GotStdout body ->
             updateStream model mapFieldStdout body
 
-        GotUncachedActionResult uncachedActionResultDigest uncachedActionResult ->
-            ( case uncachedActionResult of
+        GotUncachedActionResult uncachedActionResultDigest maybeUncachedActionResult ->
+            case maybeUncachedActionResult of
                 Err e ->
-                    { model | actionResult = Err e }
+                    ( { model | action = Err e, actionResult = Err e }
+                    , Cmd.none
+                    )
 
-                Ok v ->
-                    case v.actionResult of
-                        Nothing ->
-                            model
+                Ok uncachedActionResult ->
+                    let
+                        ( action, actionCmd ) =
+                            Api.getChildMessage
+                                "action"
+                                GotAction
+                                REv2.actionDecoder
+                                uncachedActionResult.actionDigest
+                                uncachedActionResultDigest
 
-                        Just (REv2.ActionResultMessage actionResult) ->
-                            { model
-                                | actionResult =
-                                    Ok
-                                        { data = actionResult
-                                        , stderr = Err Error.Loading
-                                        , stdout = Err Error.Loading
-                                        }
-                            }
-            , Cmd.batch <|
-                Api.getChildMessage
-                    "action"
-                    GotAction
-                    REv2.actionDecoder
-                    .actionDigest
-                    uncachedActionResultDigest
-                    uncachedActionResult
-                    :: (uncachedActionResult
-                            |> Result.toMaybe
-                            |> Maybe.andThen .actionResult
-                            |> Maybe.map (\(REv2.ActionResultMessage v) -> v)
-                            |> getCmdsForActionResult
-                       )
-            )
+                        ( actionResult, actionResultCmd ) =
+                            case uncachedActionResult.actionResult of
+                                Nothing ->
+                                    ( Err Error.ChildMessageMissing, Cmd.none )
+
+                                Just (REv2.ActionResultMessage actionResultMessage) ->
+                                    initActionResultModel actionResultMessage
+                                        |> (\( m, c ) -> ( Ok m, c ))
+                    in
+                    ( { model | action = Err action, actionResult = actionResult }
+                    , Cmd.batch [ actionCmd, actionResultCmd ]
+                    )
 
 
 mapFieldAction : (a -> a) -> { b | action : a } -> { b | action : a }
@@ -539,32 +590,38 @@ convertTerminalAttributes attributes =
 
 viewStream : String -> Result Error StreamModel -> List (Html msg)
 viewStream name model =
-    [ tr []
-        [ th [ style "width" "25%" ]
-            [ text name
+    case model of
+        Ok [] ->
+            -- Omit empty log output.
+            []
 
-            -- TODO: Link to log.
-            , text ":"
-            ]
-        , td [ style "width" "75%" ] <|
-            Page.viewError model <|
-                \stream ->
-                    [ stream
-                        |> List.map
-                            (\( attributes, body ) ->
-                                span (convertTerminalAttributes attributes) [ text body ]
-                            )
-                        |> div
-                            [ class "text-monospace"
-                            , style "background-color" "#000000"
-                            , style "border-radius" "5px"
-                            , style "font-size" "12px"
-                            , style "line-height" "20px"
-                            , style "overflow-wrap" "break-word"
-                            , style "padding" "14px 18px"
-                            , style "white-space" "pre-wrap"
-                            , style "word-break" "break-word"
-                            ]
+        _ ->
+            [ tr []
+                [ th [ style "width" "25%" ]
+                    [ text name
+
+                    -- TODO: Link to log.
+                    , text ":"
                     ]
-        ]
-    ]
+                , td [ style "width" "75%" ] <|
+                    Page.viewError model <|
+                        \stream ->
+                            [ stream
+                                |> List.map
+                                    (\( attributes, body ) ->
+                                        span (convertTerminalAttributes attributes) [ text body ]
+                                    )
+                                |> div
+                                    [ class "text-monospace"
+                                    , style "background-color" "#000000"
+                                    , style "border-radius" "5px"
+                                    , style "font-size" "12px"
+                                    , style "line-height" "20px"
+                                    , style "overflow-wrap" "break-word"
+                                    , style "padding" "14px 18px"
+                                    , style "white-space" "pre-wrap"
+                                    , style "word-break" "break-word"
+                                    ]
+                            ]
+                ]
+            ]

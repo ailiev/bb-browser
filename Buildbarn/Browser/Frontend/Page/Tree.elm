@@ -22,13 +22,15 @@ type alias Model =
 
 init : Digest -> List String -> ( Model, Cmd Msg )
 init digest path =
-    ( { tree = Err Error.Loading, path = path }
-    , Api.getMessage
-        "tree"
-        GotTree
-        REv2.treeDecoder
-        digest
-    )
+    let
+        ( e, cmd ) =
+            Api.getMessage
+                "tree"
+                GotTree
+                REv2.treeDecoder
+                digest
+    in
+    ( { tree = Err e, path = path }, cmd )
 
 
 
