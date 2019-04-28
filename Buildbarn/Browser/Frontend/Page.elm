@@ -1,5 +1,6 @@
 module Buildbarn.Browser.Frontend.Page exposing
     ( Page
+    , viewChildObjectLink
     , viewCommandInfo
     , viewDirectory
     , viewDirectoryListing
@@ -19,7 +20,7 @@ import Build.Bazel.Remote.Execution.V2.Remote_execution as REv2
 import Buildbarn.Browser.Frontend.Digest as Digest exposing (Digest)
 import Buildbarn.Browser.Frontend.Error as Error exposing (Error)
 import Buildbarn.Browser.Frontend.Shell as Shell
-import Html exposing (a, b, br, div, h1, p, table, td, text, th, tr)
+import Html exposing (a, b, br, div, h1, p, sup, table, td, text, th, tr)
 import Html.Attributes exposing (class, href, style)
 import Http
 import Url.Builder
@@ -30,6 +31,19 @@ type alias Page msg =
     , bannerColor : String
     , body : List (Html.Html msg)
     }
+
+
+internalHref : String -> Digest -> Html.Attribute msg
+internalHref kind digest =
+    href <|
+        "#"
+            ++ kind
+            ++ "/"
+            ++ digest.instance
+            ++ "/"
+            ++ digest.hash
+            ++ "/"
+            ++ String.fromInt digest.sizeBytes
 
 
 viewPage : Page msg -> Browser.Document msg
@@ -43,6 +57,21 @@ viewPage contents =
             [ a [ class "navbar-brand", href "#" ] [ text "Buildbarn Browser" ] ]
         , Grid.container [ mb5 ] ([ h1 [ my4 ] [ text contents.title ] ] ++ contents.body)
         ]
+
+
+viewChildObjectLink : String -> Digest -> Maybe REv2.DigestMessage -> List (Html.Html msg)
+viewChildObjectLink kind parentDigest maybeChildDigest =
+    case maybeChildDigest of
+        Just (REv2.DigestMessage childDigest) ->
+            [ sup []
+                [ a
+                    [ internalHref kind (Digest.getDerived parentDigest childDigest) ]
+                    [ text "*" ]
+                ]
+            ]
+
+        Nothing ->
+            []
 
 
 viewCommandInfo : REv2.Command -> Html.Html msg
@@ -128,18 +157,7 @@ viewDirectory digest directory =
 
                         Just (REv2.DigestMessage childDigest) ->
                             a
-                                [ href <|
-                                    let
-                                        derivedDigest =
-                                            Digest.getDerived digest childDigest
-                                    in
-                                    "#directory/"
-                                        ++ derivedDigest.instance
-                                        ++ "/"
-                                        ++ derivedDigest.hash
-                                        ++ "/"
-                                        ++ String.fromInt derivedDigest.sizeBytes
-                                ]
+                                [ internalHref "directory" (Digest.getDerived digest childDigest) ]
                                 [ text entry.name ]
                     , text "/"
                     ]

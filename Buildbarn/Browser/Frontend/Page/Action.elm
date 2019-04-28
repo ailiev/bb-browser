@@ -18,8 +18,8 @@ import Buildbarn.Browser.Frontend.Terminal as Terminal
 import Bytes exposing (Bytes)
 import Bytes.Decode as BD
 import Google.Protobuf.Duration as Duration
-import Html exposing (Html, a, div, h2, p, span, sup, table, td, text, th, tr)
-import Html.Attributes exposing (class, href, style)
+import Html exposing (Html, a, div, h2, p, span, table, td, text, th, tr)
+import Html.Attributes exposing (class, style)
 import Http
 import Json.Decode as JD
 import Parser
@@ -34,7 +34,51 @@ import Url.Builder
 type alias Model =
     { action : Result Error ActionModel
     , actionResult : Result Error ActionResultModel
+    , baseDigest : Digest
     }
+
+
+initCached : Digest -> ( Model, Cmd Msg )
+initCached digest =
+    let
+        ( action, actionCmd ) =
+            Api.getMessage
+                "action"
+                GotAction
+                REv2.actionDecoder
+                digest
+
+        ( actionResult, actionResultCmd ) =
+            Api.getMessage
+                "action_result"
+                GotActionResult
+                REv2.actionResultDecoder
+                digest
+    in
+    ( { action = Err action
+      , actionResult = Err action
+      , baseDigest = digest
+      }
+    , Cmd.batch [ actionCmd, actionResultCmd ]
+    )
+
+
+initUncached : Digest -> ( Model, Cmd Msg )
+initUncached digest =
+    let
+        ( e, cmd ) =
+            Api.getMessage
+                "uncached_action_result"
+                GotUncachedActionResult
+                Cas.uncachedActionResultDecoder
+                digest
+    in
+    ( { action = Err e
+      , actionResult = Err e
+      , baseDigest = digest
+      }
+    , cmd
+    )
 
 
 type alias ActionModel =
@@ -154,41 +198,6 @@ initActionResultModel actionResult =
       }
     , Cmd.batch [ stdoutCmds, stderrCmds ]
     )
-
-
-initCached : Digest -> ( Model, Cmd Msg )
-initCached digest =
-    let
-        ( action, actionCmd ) =
-            Api.getMessage
-                "action"
-                GotAction
-                REv2.actionDecoder
-                digest
-
-        ( actionResult, actionResultCmd ) =
-            Api.getMessage
-                "action_result"
-                GotActionResult
-                REv2.actionResultDecoder
-                digest
-    in
-    ( { action = Err action, actionResult = Err action }
-    , Cmd.batch [ actionCmd, actionResultCmd ]
-    )
-
-
-initUncached : Digest -> ( Model, Cmd Msg )
-initUncached digest =
-    let
-        ( e, cmd ) =
-            Api.getMessage
-                "uncached_action_result"
-                GotUncachedActionResult
-                Cas.uncachedActionResultDecoder
-                digest
-    in
-    ( { action = Err e, actionResult = Err e }, cmd )
 
 
 
@@ -385,9 +394,12 @@ view model =
                         ]
                     ]
                 , h2 [ my4 ]
-                    [ text "Command"
-                    , sup [] [ a [ href "#" ] [ text "*" ] ]
-                    ]
+                    (text "Command"
+                        :: Page.viewChildObjectLink
+                            "command"
+                            model.baseDigest
+                            actionModel.data.commandDigest
+                    )
                 ]
                     ++ (Page.viewError actionModel.command <|
                             \command -> [ Page.viewCommandInfo command ]
@@ -414,16 +426,22 @@ view model =
                                 ++ viewStream "Standard error" actionResult.stderr
                         ]
                )
-            ++ [ h2 [ my4 ]
-                    [ text "Input files"
-                    , sup [] [ a [ href "#" ] [ text "*" ] ]
-                    ]
-               ]
-            ++ (Page.viewError model.action <|
-                    \action ->
-                        Page.viewError action.inputRoot <|
-                            -- TODO: Use the right digest.
-                            Page.viewDirectory { instance = "", hash = "", sizeBytes = 0 }
+            ++ (case model.action of
+                    Ok actionModel ->
+                        h2 [ my4 ]
+                            (text "Input files"
+                                :: Page.viewChildObjectLink
+                                    "directory"
+                                    model.baseDigest
+                                    actionModel.data.inputRootDigest
+                            )
+                            :: (Page.viewError actionModel.inputRoot <|
+                                    -- TODO: Use the right digest.
+                                    Page.viewDirectory { instance = "", hash = "", sizeBytes = 0 }
+                               )
+
+                    Err _ ->
+                        []
                )
             ++ (case
                     ( model.actionResult
@@ -598,11 +616,14 @@ viewStream name model =
         _ ->
             [ tr []
                 [ th [ style "width" "25%" ]
-                    [ text name
-
-                    -- TODO: Link to log.
-                    , text ":"
-                    ]
+                    (text name
+                        -- TODO: Enable this.
+                        {- :: Page.viewChildObjectLink
+                           "log"
+                           model.baseDigest
+                        -}
+                        :: [ text ":" ]
+                    )
                 , td [ style "width" "75%" ] <|
                     Page.viewError model <|
                         \stream ->
